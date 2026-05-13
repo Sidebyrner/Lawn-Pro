@@ -1,0 +1,959 @@
+import { useState, useEffect, useCallback } from "react";
+
+const STORAGE_KEY = "lawn_pro_data_v2";
+
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const FULL_MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+const BUDGET_TIERS = { low: "Low ($100–$400)", medium: "Medium ($400–$900)", high: "High ($900–$2000+)" };
+
+const TASK_CATALOG = [
+  {
+    id: "soil_test",
+    month: 3,
+    title: "MSU Soil Test",
+    category: "soil",
+    priority: "critical",
+    budget: ["low","medium","high"],
+    cost: "$26",
+    description: "Order and submit MSU Extension soil test mailer. Take 10 sub-samples to 3\" depth, mix, air-dry overnight, mail to MSU lab.",
+    buy: [{ item: "MSU Soil Test Mailer", price: "$26", where: "spartanspiritshop.msu.edu or Oakland County MSU Extension" }],
+    outcome: "Know your pH, organic matter, P, K. Essential before buying any amendment.",
+    expectation: "Results in ~10 days. Detroit clay-loam often pH 6.5–7.5. May show need for sulfur (if pH >7.5) rather than lime.",
+    timing: "Early March — as soon as ground thaws",
+    recurring: true,
+    recurrYears: [1,3,5]
+  },
+  {
+    id: "spring_dandelion",
+    month: 4,
+    title: "Dandelion & Broadleaf Control",
+    category: "weed",
+    priority: "high",
+    budget: ["low","medium","high"],
+    cost: "$30–$95",
+    description: "Spot-treat emerged dandelions with SpeedZone or Triplet SF on a 65°F+ calm day. Do NOT apply pre-emergent to any area you plan to seed in fall.",
+    buy: [
+      { item: "SpeedZone (1 gal)", price: "$95–$135", where: "SiteOne Madison Heights / DoMyOwn" },
+      { item: "OR Triplet SF (1 gal)", price: "$60–$85", where: "SiteOne Madison Heights / DoMyOwn" },
+      { item: "Pump sprayer (2 gal)", price: "$25–$40", where: "Home Depot / Ace Hardware" }
+    ],
+    outcome: "80–90% dandelion kill on treated areas. SpeedZone shows results in 3–5 days.",
+    expectation: "Some regrowth from deep tap roots. Follow up in fall (September/October) for root-kill timing.",
+    timing: "Mid-April — when dandelions are actively growing, 65°F+",
+    recurring: true,
+    recurrYears: [1,2,3,4,5]
+  },
+  {
+    id: "preemergent_existing",
+    month: 4,
+    title: "Crabgrass Pre-emergent (Non-Renovation Areas)",
+    category: "weed",
+    priority: "high",
+    budget: ["medium","high"],
+    cost: "$25–$110",
+    description: "Apply prodiamine or pendimethalin only to mature turf areas you are NOT renovating. DO NOT apply where you plan to seed in fall — it will block germination for 3-4 months.",
+    buy: [
+      { item: "Scotts Halts (pendimethalin)", price: "$25–$35 / 5,000 sq ft", where: "Home Depot / Lowe's / Menards" },
+      { item: "OR Quali-Pro Prodiamine 65 WDG (5 lb)", price: "$80–$110 (multi-year supply)", where: "SiteOne Madison Heights / DoMyOwn" }
+    ],
+    outcome: "Prevents 90%+ of crabgrass germination in treated zones for the season.",
+    expectation: "Apply when forsythia drops blooms or soil hits 50–55°F (GDD32=250 at gddtracker.msu.edu with zip 48072). Miss this window and it's useless.",
+    timing: "Mid-April — GDD32 = 250, typically when forsythia drops",
+    recurring: true,
+    recurrYears: [2,3,4,5]
+  },
+  {
+    id: "spring_mowing",
+    month: 4,
+    title: "Spring Mowing Setup",
+    category: "maintenance",
+    priority: "medium",
+    budget: ["low","medium","high"],
+    cost: "$0–$15",
+    description: "Set mower to 3\" (spring) and 3.5\" (summer). Sharpen blade now if not done in fall. Never remove more than ⅓ of blade height per cut.",
+    buy: [{ item: "Blade sharpening file or service", price: "$0–$15", where: "Home Depot / local small engine shop" }],
+    outcome: "Sharp blade prevents tearing that invites fungal disease. Taller mowing shades out crabgrass seedlings.",
+    expectation: "Mowing at 3–3.5\" is the single cheapest crabgrass suppression tool available.",
+    timing: "Before first mow of season",
+    recurring: true,
+    recurrYears: [1,2,3,4,5]
+  },
+  {
+    id: "summer_monitoring",
+    month: 6,
+    title: "Summer Crabgrass Monitoring & Spot Spray",
+    category: "weed",
+    priority: "medium",
+    budget: ["medium","high"],
+    cost: "$70–$155",
+    description: "Walk the lawn weekly. Spot-spray any crabgrass escapes with Tenacity (mesotrione) at post-emergent rate. Add NIS surfactant for post-emergent applications.",
+    buy: [
+      { item: "Tenacity 8 oz (mesotrione)", price: "$67–$80", where: "SiteOne Madison Heights / DoMyOwn / online" },
+      { item: "OR Drive XLR8 64 oz (quinclorac)", price: "$69–$155", where: "DoMyOwn / SiteOne" },
+      { item: "Non-ionic surfactant (NIS)", price: "$10–$15", where: "SiteOne / Tractor Supply" }
+    ],
+    outcome: "Tenacity turns crabgrass white within 5–7 days; full kill in 2–3 weeks. Best on crabgrass in tiller stage.",
+    expectation: "Expect 1–3 spot treatments needed. Crabgrass won't be fully eradicated until the September kill.",
+    timing: "June–July — ongoing spot monitoring",
+    recurring: true,
+    recurrYears: [1,2,3,4,5]
+  },
+  {
+    id: "deep_watering",
+    month: 6,
+    title: "Summer Deep Watering Program",
+    category: "maintenance",
+    priority: "high",
+    budget: ["low","medium","high"],
+    cost: "$30–$200",
+    description: "Water 1–1.5\" per week total (including rain). Apply in 2–3 deep sessions, not daily sprinkles. Water 4–8 AM only. Use tuna can test to calibrate sprinkler output.",
+    buy: [
+      { item: "Oscillating sprinkler", price: "$15–$40", where: "Home Depot / Menards" },
+      { item: "Orbit B-hyve hose timer (optional)", price: "$50–$80", where: "Home Depot / Amazon" }
+    ],
+    outcome: "Deep watering trains roots downward, improving drought tolerance. Daily light watering = shallow roots = summer burnout.",
+    expectation: "July is typically the driest month in Berkley. Expect 2–3 supplemental inches/month during heat waves.",
+    timing: "June through August",
+    recurring: true,
+    recurrYears: [1,2,3,4,5]
+  },
+  {
+    id: "renovation_prep",
+    month: 8,
+    title: "Renovation Prep: Glyphosate Kill Pass",
+    category: "renovation",
+    priority: "critical",
+    budget: ["medium","high"],
+    cost: "$55–$170",
+    description: "Apply glyphosate to entire renovation area. Use plain glyphosate only — NO 'Extended Control' or 'Dual Action' formulas (they have soil residuals). Wait 7–14 days for full kill confirmation.",
+    buy: [
+      { item: "Generic 41% glyphosate 2.5 gal (Credit 41 / GlyStar / Ranger Pro)", price: "$55–$80", where: "SiteOne Madison Heights / DoMyOwn" },
+      { item: "Backpack sprayer 4 gal", price: "$60–$100", where: "Home Depot / SiteOne" }
+    ],
+    outcome: "Full kill of all existing vegetation including crabgrass. Lawn turns brown in 7–10 days.",
+    expectation: "Dense crabgrass may need a second pass 10–14 days after first. DO NOT use any glyphosate with soil residual (Roundup Extended Control, etc.).",
+    timing: "First pass: August 8–12. Second pass (if needed): August 19–22.",
+    recurring: false,
+    recurrYears: [1]
+  },
+  {
+    id: "order_supplies",
+    month: 8,
+    title: "Order All Renovation Supplies",
+    category: "planning",
+    priority: "critical",
+    budget: ["low","medium","high"],
+    cost: "$300–$800+",
+    description: "Order seed, Tenacity, starter fertilizer, and topdressing mix BEFORE renovation weekend. Book equipment rental at Home Depot Royal Oak / Madison Heights for your target Saturday. Rentals book out 3+ weeks in advance in September.",
+    buy: [
+      { item: "Elite KBG seed (GCI Blue Heat 10 lb)", price: "$79.95", where: "gciturfacademy.com" },
+      { item: "OR Jonathan Green Blue Panther 25 lb", price: "$130–$160", where: "Ace Hardware / Home Depot" },
+      { item: "OR Jonathan Green Black Beauty Ultra 25 lb", price: "$129.99", where: "Home Depot / Walmart" },
+      { item: "Starter fertilizer (Andersons 20-27-5 or Scotts 24-25-4)", price: "$25–$30 each", where: "SiteOne / Home Depot" },
+      { item: "Tenacity 8 oz + NIS surfactant", price: "$77–$95", where: "DoMyOwn / SiteOne" },
+      { item: "Bulk topdressing (2 yd 50/50 sand-topsoil delivered)", price: "$150–$200", where: "Redford Topsoil / Angelo's / In-N-Out Topsoil" },
+      { item: "Straw mulch (1–2 bales)", price: "$8–$12 per bale", where: "Home Depot / Tractor Supply" }
+    ],
+    outcome: "Everything staged and ready for renovation weekend.",
+    expectation: "Do not buy seed at big-box stores without reading the label — avoid K-31 tall fescue and any coated 'Smart Seed' that is 50% filler by weight.",
+    timing: "Early August — 2–3 weeks before renovation",
+    recurring: false,
+    recurrYears: [1]
+  },
+  {
+    id: "equipment_rental",
+    month: 8,
+    title: "Reserve Equipment Rentals",
+    category: "planning",
+    priority: "critical",
+    budget: ["medium","high"],
+    cost: "$143–$230",
+    description: "Reserve at homedepot.com/rentals (zip 48072) or call Home Depot Royal Oak / Madison Heights. Pick up at 7 AM Saturday, return by 11 AM to pay only the 4-hour rate.",
+    buy: [
+      { item: "Core aerator (Classen CA-18, 4-hr)", price: "$73–$87", where: "Home Depot Tool Rental — book online" },
+      { item: "Power rake / dethatcher (4-hr)", price: "$50–$65", where: "Home Depot Tool Rental — book online" },
+      { item: "Lawn roller water-fill (4-hr)", price: "$18–$25", where: "Home Depot Tool Rental — book online" },
+      { item: "Slit seeder (optional upgrade, daily)", price: "$120–$140", where: "Home Depot / Sunbelt Rentals" }
+    ],
+    outcome: "One Saturday = full renovation. Core aeration breaks clay, power rake removes thatch, roller presses seed into soil contact.",
+    expectation: "Book 3+ weeks ahead. Peak Saturday slots in August/September sell out. Call Ashmore Rentals Madison Heights (248-588-3300) for potentially lower rates.",
+    timing: "Reserve now for target weekend of August 22–September 5",
+    recurring: false,
+    recurrYears: [1]
+  },
+  {
+    id: "renovation_weekend",
+    month: 8,
+    title: "⭐ Renovation Weekend",
+    category: "renovation",
+    priority: "critical",
+    budget: ["medium","high"],
+    cost: "See above line items",
+    description: "The main event. Full sequence: (1) Scalp-mow dead lawn. (2) Power rake to expose 50%+ bare soil. (3) Core aerate 2 perpendicular passes. (4) Spread topdressing, rake level with leveling rake. (5) Broadcast seed. (6) Apply starter fertilizer. (7) Spray Tenacity at seeding rate (NO surfactant). (8) Run half-filled roller in one pass. (9) Optional light straw mulch on slopes.",
+    buy: [
+      { item: "36\" Leveling rake (VEVOR/Gardease)", price: "$45–$70", where: "Amazon / SiteOne" }
+    ],
+    outcome: "Seedbed prepared, seed placed, weed suppression active, nutrition ready. Germination begins in 7–14 days for KBG.",
+    expectation: "Expect 4–6 weeks of careful watering before first mow. KBG is slow to germinate (14–30 days) — do not panic. Ryegrass in the mix will show first.",
+    timing: "August 22 – September 5 is the ideal window. September 15 is the hard cutoff for KBG establishment before frost.",
+    recurring: false,
+    recurrYears: [1]
+  },
+  {
+    id: "germination_water",
+    month: 9,
+    title: "Germination Watering Protocol",
+    category: "maintenance",
+    priority: "critical",
+    budget: ["low","medium","high"],
+    cost: "$0",
+    description: "Days 1–14: water 3–4x daily, 5–10 min each. Days 15–28: 2x daily, 10–15 min. Days 29+: once daily, 15–20 min. Top ¼\" of soil must stay moist but never saturated. Set phone reminders or use hose timer.",
+    buy: [],
+    outcome: "Consistent moisture = consistent germination. Missing even one drying-out cycle can kill emerging seedlings before they anchor.",
+    expectation: "KBG emerges around day 14–21. Tall fescue 7–10 days. Ryegrass 5–7 days. Thin or sparse areas are normal — KBG fills via rhizomes over year 2.",
+    timing: "September — entire month post-seeding",
+    recurring: false,
+    recurrYears: [1]
+  },
+  {
+    id: "labor_day_fert",
+    month: 9,
+    title: "Labor Day Fertilizer (Most Important Feed of Year)",
+    category: "fertilizer",
+    priority: "critical",
+    budget: ["low","medium","high"],
+    cost: "$25–$60",
+    description: "Apply fall fertilizer at 0.75–1.0 lb N per 1,000 sq ft using a 24-0-11 or 32-0-4 formula. This builds root mass and carbohydrate reserves for winter and spring green-up. Note: Michigan law requires 0-P fertilizer except during new lawn establishment.",
+    buy: [
+      { item: "Lesco 24-0-11 (50 lb / 12,000 sq ft)", price: "$35–$50", where: "SiteOne Madison Heights" },
+      { item: "OR Scotts Turf Builder 32-0-4", price: "$25–$35", where: "Home Depot / Lowe's" }
+    ],
+    outcome: "Deep green color through fall, faster spring green-up, stronger root system that competes with weeds.",
+    expectation: "The fall N program (Labor Day + mid-October + dormant feed) is more impactful than any spring feeding. Do not skip.",
+    timing: "Labor Day weekend (early September)",
+    recurring: true,
+    recurrYears: [1,2,3,4,5]
+  },
+  {
+    id: "fall_dandelion",
+    month: 9,
+    title: "Fall Dandelion Root-Kill Treatment",
+    category: "weed",
+    priority: "high",
+    budget: ["low","medium","high"],
+    cost: "$60–$135",
+    description: "Best broadleaf herbicide timing of the year. Dandelions are translocating carbohydrates to roots for winter storage — herbicide travels with them and kills root system. Spray established turf areas (not new seedlings) with SpeedZone.",
+    buy: [
+      { item: "SpeedZone 1 gal", price: "$95–$135", where: "SiteOne Madison Heights / DoMyOwn" }
+    ],
+    outcome: "Far more effective root-kill than spring application. Expect 90%+ kill on treated plants within 2–3 weeks.",
+    expectation: "New turf from August seeding must be mowed 2+ times before SpeedZone application. Check label for minimum establishment period.",
+    timing: "Late September / early October",
+    recurring: true,
+    recurrYears: [1,2,3,4,5]
+  },
+  {
+    id: "october_fert",
+    month: 10,
+    title: "Mid-October Fertilizer",
+    category: "fertilizer",
+    priority: "high",
+    budget: ["low","medium","high"],
+    cost: "$25–$50",
+    description: "Second fall fertilizer application at 0.75 lb N per 1,000 sq ft. Same product as Labor Day feed. Apply even if grass has slowed growing — roots are still active.",
+    buy: [
+      { item: "Lesco 24-0-11 or Scotts 32-0-4", price: "$25–$50", where: "SiteOne / Home Depot" }
+    ],
+    outcome: "Stacks with Labor Day feed to build maximum root reserves for spring.",
+    expectation: "If budget is tight, Labor Day feed > mid-October feed > spring feed in terms of KBG impact.",
+    timing: "Mid-October (around October 15)",
+    recurring: true,
+    recurrYears: [1,2,3,4,5]
+  },
+  {
+    id: "first_mow_new",
+    month: 9,
+    title: "First Mow of New Seedlings",
+    category: "maintenance",
+    priority: "high",
+    budget: ["low","medium","high"],
+    cost: "$0",
+    description: "Mow when seedlings reach 3.5–4\". Set blade to 2.5–3\". BAG the clippings for first 1–2 mows to avoid smothering young plants. Never remove more than ⅓ height.",
+    buy: [],
+    outcome: "Encourages lateral spread and tillering. Delays = lush but weak seedlings prone to disease.",
+    expectation: "New KBG seedlings look sparse at first — this is normal. Rhizome spread fills gaps over year 2.",
+    timing: "~28–35 days after seeding (mid to late October)",
+    recurring: false,
+    recurrYears: [1]
+  },
+  {
+    id: "dormant_feed",
+    month: 11,
+    title: "Dormant Fertilizer Feed",
+    category: "fertilizer",
+    priority: "medium",
+    budget: ["medium","high"],
+    cost: "$15–$25",
+    description: "Apply urea 46-0-0 at ~1 lb product per 1,000 sq ft after top growth has stopped but before ground freezes. Michigan law: do NOT apply to frozen or saturated soil. Sweep all granules off sidewalk/driveway immediately.",
+    buy: [
+      { item: "Urea 46-0-0 granular (10–20 lb)", price: "$15–$25", where: "SiteOne / Tractor Supply / local feed store" }
+    ],
+    outcome: "Provides stored N that becomes available for early spring green-up without promoting growth that winter will kill.",
+    expectation: "Optional but measurably improves spring color and density. Skip if ground is already frozen.",
+    timing: "Mid-November — after top growth stops, before freeze",
+    recurring: true,
+    recurrYears: [1,2,3,4,5]
+  },
+  {
+    id: "final_mow",
+    month: 11,
+    title: "Final Fall Mow",
+    category: "maintenance",
+    priority: "medium",
+    budget: ["low","medium","high"],
+    cost: "$0",
+    description: "Lower deck to 2–2.5\" for the final mow of the season. This reduces snow mold risk — long grass matted under snow creates fungal habitat. Do not mow frozen grass.",
+    buy: [],
+    outcome: "Reduces gray/pink snow mold incidence significantly. Berkley gets 30–50\" annual snowfall — snow mold is a real risk.",
+    expectation: "Look for circular gray or pink matted patches in early spring. If found, rake them out and overseed in fall.",
+    timing: "Late October / early November",
+    recurring: true,
+    recurrYears: [1,2,3,4,5]
+  },
+  {
+    id: "spring_overseed_y2",
+    month: 4,
+    title: "Year 2: Spot Overseed Thin Areas",
+    category: "renovation",
+    priority: "medium",
+    budget: ["low","medium","high"],
+    cost: "$30–$80",
+    description: "Fill in thin or bare spots that didn't establish well. Small patches only — rake lightly, broadcast seed at 2x rate, topdress lightly, water. KBG is still filling via rhizomes.",
+    buy: [
+      { item: "Elite KBG seed (2–3 lb)", price: "$30–$50", where: "gciturfacademy.com / SiteOne" }
+    ],
+    outcome: "Fills visible gaps before crabgrass seeds occupy them.",
+    expectation: "Year 2 KBG will look significantly better than Year 1. Rhizome spread is visibly filling in bare spots by June.",
+    timing: "Mid-April year 2 — before pre-emergent window",
+    recurring: false,
+    recurrYears: [2]
+  },
+  {
+    id: "preemergent_y2",
+    month: 4,
+    title: "Year 2: Full Pre-emergent Program",
+    category: "weed",
+    priority: "critical",
+    budget: ["medium","high"],
+    cost: "$80–$110",
+    description: "NOW you can run a full prodiamine pre-emergent program across the entire mature lawn. Apply at GDD32 = 250 (gddtracker.msu.edu zip 48072). This is the year the crabgrass fight really gets won.",
+    buy: [
+      { item: "Quali-Pro Prodiamine 65 WDG (5 lb jug — 5-year supply)", price: "$80–$110", where: "SiteOne Madison Heights / DoMyOwn" },
+      { item: "Broadcast spreader (if not owned)", price: "$30–$80", where: "Home Depot / Menards" }
+    ],
+    outcome: "90%+ crabgrass prevention across the full lawn. Year 2 is when the weed pressure dramatically drops.",
+    expectation: "Combined with the fall kill from year 1, crabgrass population drops 85–95% by end of year 2.",
+    timing: "Mid-April year 2 — GDD32 = 250",
+    recurring: false,
+    recurrYears: [2]
+  },
+  {
+    id: "annual_aeration",
+    month: 9,
+    title: "Annual Core Aeration",
+    category: "maintenance",
+    priority: "high",
+    budget: ["medium","high"],
+    cost: "$73–$123",
+    description: "Annual fall aeration is the single best maintenance practice for clay-heavy Berkley soil. Relieves compaction, improves water penetration, reduces thatch, and opens channels for topdressing and fertilizer.",
+    buy: [
+      { item: "Core aerator rental (4-hr or daily)", price: "$73–$123", where: "Home Depot Tool Rental" }
+    ],
+    outcome: "Measurably improved drainage and root depth each year. Compaction is the #1 silent lawn killer on Detroit clay.",
+    expectation: "Leave cores on surface to break down — they return organic matter. Or rake into low spots as topdressing.",
+    timing: "Late August / early September — do before overseeding",
+    recurring: true,
+    recurrYears: [2,3,4,5]
+  },
+  {
+    id: "annual_topdress",
+    month: 9,
+    title: "Annual Topdress (Leveling Passes)",
+    category: "soil",
+    priority: "medium",
+    budget: ["medium","high"],
+    cost: "$50–$200",
+    description: "Apply ¼\" of 40/40/20 sand-topsoil-compost mix to remaining bumps and low spots. Never bury more than ½\" of grass blade per application. Persistent spots need 2–3 annual cycles.",
+    buy: [
+      { item: "Bulk topdressing 1 yd (50/50 sand-topsoil)", price: "$75–$150 delivered", where: "Redford Topsoil / Angelo's Supplies" }
+    ],
+    outcome: "Cumulative leveling over 2–3 years produces a smooth, fairway-quality surface.",
+    expectation: "Bumps and ruts that needed 3–4\" of fill cannot be corrected in one season without killing existing grass.",
+    timing: "After core aeration, before overseeding",
+    recurring: true,
+    recurrYears: [2,3,4,5]
+  }
+];
+
+const CATEGORY_COLORS = {
+  soil: { bg: "#EAF3DE", text: "#3B6D11", border: "#639922", label: "Soil" },
+  weed: { bg: "#FCEBEB", text: "#A32D2D", border: "#E24B4A", label: "Weed Control" },
+  renovation: { bg: "#E6F1FB", text: "#185FA5", border: "#378ADD", label: "Renovation" },
+  fertilizer: { bg: "#FAEEDA", text: "#854F0B", border: "#BA7517", label: "Fertilizer" },
+  maintenance: { bg: "#E1F5EE", text: "#0F6E56", border: "#1D9E75", label: "Maintenance" },
+  planning: { bg: "#EEEDFE", text: "#534AB7", border: "#7F77DD", label: "Planning" },
+};
+
+const PRIORITY_COLORS = {
+  critical: { bg: "#FCEBEB", text: "#A32D2D", dot: "#E24B4A" },
+  high: { bg: "#FAEEDA", text: "#854F0B", dot: "#EF9F27" },
+  medium: { bg: "#EAF3DE", text: "#3B6D11", dot: "#63992" }
+};
+
+const defaultData = () => ({
+  year: new Date().getFullYear(),
+  budget: "medium",
+  completedTasks: {},
+  outcomes: {},
+  notes: {},
+  taskResults: {}
+});
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return { ...defaultData(), ...JSON.parse(raw) };
+  } catch {}
+  return defaultData();
+}
+
+function saveData(data) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
+}
+
+function getTasksForYear(year, budget) {
+  const startYear = year;
+  return TASK_CATALOG.filter(t => {
+    if (!t.budget.includes(budget) && budget !== "high") {
+      if (budget === "low" && !t.budget.includes("low")) return false;
+      if (budget === "medium" && !t.budget.includes("low") && !t.budget.includes("medium")) return false;
+    }
+    return true;
+  });
+}
+
+function getTaskKey(taskId, year, month) {
+  return `${taskId}_${year}_${month}`;
+}
+
+export default function LawnPro() {
+  const [data, setData] = useState(loadData);
+  const [activeMonth, setActiveMonth] = useState(new Date().getMonth());
+  const [activeTask, setActiveTask] = useState(null);
+  const [view, setView] = useState("calendar");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiResponse, setAiResponse] = useState(null);
+  const [resultInput, setResultInput] = useState("");
+  const [noteInput, setNoteInput] = useState("");
+  const [yearOffset, setYearOffset] = useState(0);
+
+  const currentYear = data.year + yearOffset;
+
+  useEffect(() => { saveData(data); }, [data]);
+
+  const getTasksThisYear = useCallback(() => {
+    return TASK_CATALOG.filter(t => t.recurrYears.includes(yearOffset + 1));
+  }, [yearOffset]);
+
+  const monthTasks = useCallback((month) => {
+    return getTasksThisYear().filter(t => t.month === month + 1);
+  }, [getTasksThisYear]);
+
+  const isCompleted = (taskId, month) => {
+    const key = getTaskKey(taskId, currentYear, month);
+    return !!data.completedTasks[key];
+  };
+
+  const toggleComplete = (taskId, month) => {
+    const key = getTaskKey(taskId, currentYear, month);
+    setData(d => ({
+      ...d,
+      completedTasks: { ...d.completedTasks, [key]: !d.completedTasks[key] }
+    }));
+  };
+
+  const getMonthProgress = (month) => {
+    const tasks = monthTasks(month);
+    if (!tasks.length) return null;
+    const done = tasks.filter(t => isCompleted(t.id, month + 1)).length;
+    return { done, total: tasks.length, pct: Math.round((done / tasks.length) * 100) };
+  };
+
+  const getPriorityTasks = () => {
+    const now = new Date();
+    const month = now.getMonth();
+    const upcoming = [];
+    for (let m = month; m <= month + 2; m++) {
+      const idx = m % 12;
+      monthTasks(idx).forEach(t => {
+        if (!isCompleted(t.id, idx + 1)) {
+          upcoming.push({ ...t, month: idx });
+        }
+      });
+    }
+    return upcoming
+      .sort((a, b) => {
+        const p = { critical: 0, high: 1, medium: 2 };
+        return p[a.priority] - p[b.priority];
+      })
+      .slice(0, 5);
+  };
+
+  const getTotalSpend = () => {
+    const completedIds = Object.entries(data.completedTasks)
+      .filter(([k, v]) => v && k.includes(`_${currentYear}_`))
+      .map(([k]) => k.split("_")[0]);
+    return completedIds.length;
+  };
+
+  const askAI = async (task, userResult) => {
+    setAiLoading(true);
+    setAiResponse(null);
+    try {
+      const prompt = `You are an expert greenskeeper and lawn care specialist for southeast Michigan (Berkley, MI — Detroit metro, USDA zone 6a, heavy clay-loam soil). 
+
+A homeowner just completed this lawn task:
+Task: "${task.title}"
+Expected outcome: "${task.outcome}"
+Expected experience: "${task.expectation}"
+Timing: "${task.timing}"
+Budget tier: ${data.budget}
+
+They are reporting these actual results:
+"${userResult}"
+
+Give a concise (3–5 sentences max), practical, specific response that:
+1. Interprets what their result means
+2. Tells them if this is normal or if there's a problem
+3. Gives them the single most important next action to take
+4. Adjusts any upcoming recommendations if needed
+
+Be direct and specific to southeast Michigan conditions. No generic advice.`;
+
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 1000,
+          messages: [{ role: "user", content: prompt }]
+        })
+      });
+      const json = await res.json();
+      const text = json.content?.find(b => b.type === "text")?.text || "No response.";
+      setAiResponse(text);
+      const key = getTaskKey(task.id, currentYear, task.month + 1);
+      setData(d => ({
+        ...d,
+        taskResults: { ...d.taskResults, [key]: userResult },
+        outcomes: { ...d.outcomes, [key]: text }
+      }));
+    } catch (e) {
+      setAiResponse("Unable to get AI analysis. Check your connection.");
+    }
+    setAiLoading(false);
+  };
+
+  const totalTasksYear = getTasksThisYear().length;
+  const completedYear = getTasksThisYear().filter(t => isCompleted(t.id, t.month)).length;
+
+  const catStyle = (cat) => CATEGORY_COLORS[cat] || CATEGORY_COLORS.maintenance;
+
+  return (
+    <div style={{ fontFamily: "'Georgia', serif", minHeight: "100vh", background: "var(--color-background-tertiary)", padding: "0 0 60px" }}>
+      <h2 className="sr-only" style={{ position: "absolute", width: 1, height: 1, overflow: "hidden" }}>Lawn Pro Calendar — Detroit Metro Lawn Care Task Manager</h2>
+
+      {/* Header */}
+      <div style={{ background: "var(--color-background-primary)", borderBottom: "0.5px solid var(--color-border-tertiary)", padding: "16px 20px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: 22, lineHeight: 1 }}>🌿</span>
+              <div>
+                <h1 style={{ margin: 0, fontSize: 20, fontWeight: 500, color: "var(--color-text-primary)", letterSpacing: "-0.3px" }}>Lawn Pro Calendar</h1>
+                <p style={{ margin: 0, fontSize: 12, color: "var(--color-text-secondary)", fontFamily: "var(--font-sans)" }}>Berkley, MI · Zone 6a · Kentucky Bluegrass</p>
+              </div>
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: "var(--font-sans)", fontSize: 13 }}>
+              <label style={{ color: "var(--color-text-secondary)" }}>Budget:</label>
+              <select value={data.budget} onChange={e => setData(d => ({ ...d, budget: e.target.value }))} style={{ fontSize: 13, padding: "4px 8px" }}>
+                {Object.entries(BUDGET_TIERS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              </select>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: "var(--font-sans)", fontSize: 13 }}>
+              <button onClick={() => setYearOffset(y => y - 1)} style={{ padding: "4px 8px", fontSize: 13 }}>‹</button>
+              <span style={{ fontWeight: 500, minWidth: 40, textAlign: "center" }}>Year {yearOffset + 1}</span>
+              <button onClick={() => setYearOffset(y => Math.min(y + 1, 4))} style={{ padding: "4px 8px", fontSize: 13 }}>›</button>
+            </div>
+          </div>
+        </div>
+
+        {/* Nav */}
+        <div style={{ display: "flex", gap: 4, marginTop: 14, fontFamily: "var(--font-sans)" }}>
+          {[["calendar", "📅 Calendar"], ["priorities", "⭐ Priorities"], ["shopping", "🛒 Shopping List"]].map(([k, v]) => (
+            <button key={k} onClick={() => setView(k)} style={{
+              padding: "6px 14px", fontSize: 13, borderRadius: "var(--border-radius-md)",
+              background: view === k ? "var(--color-background-info)" : "transparent",
+              color: view === k ? "var(--color-text-info)" : "var(--color-text-secondary)",
+              border: view === k ? "0.5px solid var(--color-border-info)" : "0.5px solid transparent",
+              fontWeight: view === k ? 500 : 400
+            }}>{v}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* Year progress bar */}
+      <div style={{ background: "var(--color-background-primary)", borderBottom: "0.5px solid var(--color-border-tertiary)", padding: "10px 20px", display: "flex", alignItems: "center", gap: 16, fontFamily: "var(--font-sans)" }}>
+        <span style={{ fontSize: 12, color: "var(--color-text-secondary)", whiteSpace: "nowrap" }}>Year {yearOffset + 1} progress</span>
+        <div style={{ flex: 1, height: 6, background: "var(--color-background-secondary)", borderRadius: 3, overflow: "hidden" }}>
+          <div style={{ height: "100%", width: `${totalTasksYear ? Math.round((completedYear / totalTasksYear) * 100) : 0}%`, background: "#1D9E75", borderRadius: 3, transition: "width 0.4s" }} />
+        </div>
+        <span style={{ fontSize: 12, color: "var(--color-text-secondary)", whiteSpace: "nowrap" }}>{completedYear}/{totalTasksYear} tasks</span>
+      </div>
+
+      <div style={{ padding: "16px 20px", maxWidth: 800, margin: "0 auto" }}>
+
+        {/* CALENDAR VIEW */}
+        {view === "calendar" && (
+          <div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(0, 1fr))", gap: 0, background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", overflow: "hidden", marginBottom: 20 }}>
+              {MONTHS.map((m, i) => {
+                const tasks = monthTasks(i);
+                const prog = getMonthProgress(i);
+                const isActive = i === activeMonth;
+                const hasCritical = tasks.some(t => t.priority === "critical" && !isCompleted(t.id, i + 1));
+                return (
+                  <button key={m} onClick={() => setActiveMonth(i)} style={{
+                    padding: "10px 6px", border: "none", borderRight: i < 11 ? "0.5px solid var(--color-border-tertiary)" : "none",
+                    background: isActive ? "#EAF3DE" : "var(--color-background-primary)",
+                    cursor: "pointer", transition: "background 0.15s", position: "relative"
+                  }}>
+                    <div style={{ fontSize: 10, fontFamily: "var(--font-sans)", color: isActive ? "#3B6D11" : "var(--color-text-secondary)", fontWeight: isActive ? 500 : 400, marginBottom: 3 }}>{m}</div>
+                    {hasCritical && <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#E24B4A", margin: "2px auto" }} />}
+                    {tasks.length > 0 && !hasCritical && <div style={{ fontSize: 9, color: "var(--color-text-tertiary)", fontFamily: "var(--font-sans)" }}>{tasks.length}</div>}
+                    {prog && prog.pct === 100 && <div style={{ fontSize: 10, color: "#1D9E75" }}>✓</div>}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Month detail */}
+            <div>
+              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 12 }}>
+                <h2 style={{ margin: 0, fontSize: 22, fontWeight: 500, color: "var(--color-text-primary)" }}>{FULL_MONTHS[activeMonth]}</h2>
+                {(() => {
+                  const prog = getMonthProgress(activeMonth);
+                  if (!prog) return <span style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--color-text-secondary)" }}>No tasks this month</span>;
+                  return <span style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--color-text-secondary)" }}>{prog.done}/{prog.total} done</span>;
+                })()}
+              </div>
+
+              {monthTasks(activeMonth).length === 0 && (
+                <div style={{ background: "var(--color-background-secondary)", borderRadius: "var(--border-radius-lg)", padding: "24px", textAlign: "center", fontFamily: "var(--font-sans)", color: "var(--color-text-secondary)", fontSize: 14 }}>
+                  No tasks scheduled for {FULL_MONTHS[activeMonth]} in Year {yearOffset + 1}
+                </div>
+              )}
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {monthTasks(activeMonth).map(task => {
+                  const done = isCompleted(task.id, task.month);
+                  const cat = catStyle(task.category);
+                  const key = getTaskKey(task.id, currentYear, task.month);
+                  const savedResult = data.taskResults[key];
+                  const savedOutcome = data.outcomes[key];
+                  const isOpen = activeTask === task.id;
+
+                  return (
+                    <div key={task.id} style={{
+                      background: "var(--color-background-primary)",
+                      border: `0.5px solid ${done ? "#9FE1CB" : "var(--color-border-tertiary)"}`,
+                      borderRadius: "var(--border-radius-lg)",
+                      overflow: "hidden",
+                      transition: "border-color 0.2s",
+                      opacity: done ? 0.75 : 1
+                    }}>
+                      <div
+                        onClick={() => setActiveTask(isOpen ? null : task.id)}
+                        style={{ padding: "12px 16px", cursor: "pointer", display: "flex", alignItems: "flex-start", gap: 12 }}
+                      >
+                        <button
+                          onClick={e => { e.stopPropagation(); toggleComplete(task.id, task.month); }}
+                          style={{
+                            width: 20, height: 20, borderRadius: "50%", flexShrink: 0, marginTop: 1,
+                            background: done ? "#1D9E75" : "transparent",
+                            border: `1.5px solid ${done ? "#1D9E75" : "var(--color-border-secondary)"}`,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            cursor: "pointer", transition: "all 0.2s", padding: 0
+                          }}
+                          aria-label={done ? "Mark incomplete" : "Mark complete"}
+                        >
+                          {done && <span style={{ color: "#fff", fontSize: 11, lineHeight: 1 }}>✓</span>}
+                        </button>
+
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
+                            <span style={{ fontFamily: "var(--font-sans)", fontSize: 14, fontWeight: 500, color: done ? "var(--color-text-secondary)" : "var(--color-text-primary)", textDecoration: done ? "line-through" : "none" }}>{task.title}</span>
+                            <span style={{ fontSize: 11, fontFamily: "var(--font-sans)", padding: "2px 8px", borderRadius: 99, background: cat.bg, color: cat.text, border: `0.5px solid ${cat.border}` }}>{cat.label}</span>
+                            <span style={{ fontSize: 11, fontFamily: "var(--font-sans)", padding: "2px 8px", borderRadius: 99, background: PRIORITY_COLORS[task.priority]?.bg, color: PRIORITY_COLORS[task.priority]?.text }}>
+                              {task.priority === "critical" ? "🔴 Critical" : task.priority === "high" ? "🟡 High" : "🟢 Medium"}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: 12, fontFamily: "var(--font-sans)", color: "var(--color-text-secondary)" }}>{task.timing} · {task.cost}</div>
+                          {savedResult && <div style={{ fontSize: 11, fontFamily: "var(--font-sans)", color: "#185FA5", marginTop: 4 }}>📋 Result recorded</div>}
+                        </div>
+                        <span style={{ color: "var(--color-text-tertiary)", fontSize: 16, flexShrink: 0, fontFamily: "var(--font-sans)" }}>{isOpen ? "▲" : "▼"}</span>
+                      </div>
+
+                      {isOpen && (
+                        <div style={{ borderTop: "0.5px solid var(--color-border-tertiary)", padding: "16px", fontFamily: "var(--font-sans)" }}>
+                          <p style={{ margin: "0 0 12px", fontSize: 13, color: "var(--color-text-primary)", lineHeight: 1.6 }}>{task.description}</p>
+
+                          {task.buy.length > 0 && (
+                            <div style={{ marginBottom: 14 }}>
+                              <div style={{ fontSize: 11, fontWeight: 500, color: "var(--color-text-secondary)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>What to buy / rent</div>
+                              <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                                {task.buy.map((b, i) => (
+                                  <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start", background: "var(--color-background-secondary)", borderRadius: "var(--border-radius-md)", padding: "7px 10px" }}>
+                                    <span style={{ fontSize: 12, color: "var(--color-text-primary)", flex: 1 }}>{b.item}</span>
+                                    <span style={{ fontSize: 12, fontWeight: 500, color: "#185FA5", whiteSpace: "nowrap" }}>{b.price}</span>
+                                    <span style={{ fontSize: 11, color: "var(--color-text-secondary)", textAlign: "right", maxWidth: 160 }}>{b.where}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
+                            <div style={{ background: "#EAF3DE", borderRadius: "var(--border-radius-md)", padding: "10px 12px" }}>
+                              <div style={{ fontSize: 10, fontWeight: 500, color: "#3B6D11", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>Expected outcome</div>
+                              <p style={{ margin: 0, fontSize: 12, color: "#27500A", lineHeight: 1.5 }}>{task.outcome}</p>
+                            </div>
+                            <div style={{ background: "#FAEEDA", borderRadius: "var(--border-radius-md)", padding: "10px 12px" }}>
+                              <div style={{ fontSize: 10, fontWeight: 500, color: "#854F0B", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>What to expect</div>
+                              <p style={{ margin: 0, fontSize: 12, color: "#633806", lineHeight: 1.5 }}>{task.expectation}</p>
+                            </div>
+                          </div>
+
+                          {/* AI outcome section */}
+                          <div style={{ background: "var(--color-background-secondary)", borderRadius: "var(--border-radius-md)", padding: "12px 14px" }}>
+                            <div style={{ fontSize: 11, fontWeight: 500, color: "var(--color-text-secondary)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.06em" }}>Log your results → get AI advice</div>
+                            {savedResult && (
+                              <div style={{ background: "var(--color-background-primary)", borderRadius: "var(--border-radius-md)", padding: "8px 10px", marginBottom: 8, fontSize: 12, color: "var(--color-text-secondary)", borderLeft: "2px solid var(--color-border-info)" }}>
+                                <strong>Your result:</strong> {savedResult}
+                              </div>
+                            )}
+                            {savedOutcome && (
+                              <div style={{ background: "#E6F1FB", borderRadius: "var(--border-radius-md)", padding: "10px 12px", marginBottom: 10, fontSize: 12, color: "#185FA5", lineHeight: 1.6 }}>
+                                🤖 {savedOutcome}
+                              </div>
+                            )}
+                            <div style={{ display: "flex", gap: 8 }}>
+                              <input
+                                type="text"
+                                placeholder={savedResult ? "Update your result..." : "Describe what happened (e.g. 'crabgrass turning white but dandelions not dying')"}
+                                value={activeTask === task.id ? resultInput : ""}
+                                onChange={e => setResultInput(e.target.value)}
+                                style={{ flex: 1, fontSize: 12, padding: "6px 10px" }}
+                                onFocus={() => setResultInput(savedResult || "")}
+                              />
+                              <button
+                                onClick={() => { if (resultInput.trim()) askAI(task, resultInput); }}
+                                disabled={aiLoading || !resultInput.trim()}
+                                style={{ fontSize: 12, padding: "6px 12px", whiteSpace: "nowrap" }}
+                              >
+                                {aiLoading ? "Analyzing..." : "Get advice ↗"}
+                              </button>
+                            </div>
+                            {aiResponse && activeTask === task.id && (
+                              <div style={{ marginTop: 10, background: "#E6F1FB", borderRadius: "var(--border-radius-md)", padding: "10px 12px", fontSize: 12, color: "#185FA5", lineHeight: 1.6 }}>
+                                🤖 {aiResponse}
+                              </div>
+                            )}
+                          </div>
+
+                          <button
+                            onClick={() => toggleComplete(task.id, task.month)}
+                            style={{
+                              marginTop: 12, width: "100%", padding: "9px", fontSize: 13, fontWeight: 500,
+                              background: done ? "transparent" : "#1D9E75", color: done ? "var(--color-text-secondary)" : "#fff",
+                              border: done ? "0.5px solid var(--color-border-secondary)" : "none",
+                              borderRadius: "var(--border-radius-md)", cursor: "pointer"
+                            }}
+                          >
+                            {done ? "↩ Mark as not done" : "✓ Mark as complete"}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* PRIORITIES VIEW */}
+        {view === "priorities" && (
+          <div>
+            <div style={{ marginBottom: 20 }}>
+              <h2 style={{ margin: "0 0 4px", fontSize: 20, fontWeight: 500 }}>Top priorities right now</h2>
+              <p style={{ margin: 0, fontSize: 13, color: "var(--color-text-secondary)", fontFamily: "var(--font-sans)" }}>Based on current date and your Year {yearOffset + 1} program</p>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 10, marginBottom: 24 }}>
+              {[
+                { label: "Tasks this year", value: totalTasksYear, color: "var(--color-text-primary)" },
+                { label: "Completed", value: completedYear, color: "#1D9E75" },
+                { label: "Remaining", value: totalTasksYear - completedYear, color: "#BA7517" },
+                { label: "% done", value: `${totalTasksYear ? Math.round((completedYear / totalTasksYear) * 100) : 0}%`, color: "var(--color-text-primary)" }
+              ].map((s, i) => (
+                <div key={i} style={{ background: "var(--color-background-secondary)", borderRadius: "var(--border-radius-md)", padding: "12px 16px" }}>
+                  <div style={{ fontSize: 12, color: "var(--color-text-secondary)", fontFamily: "var(--font-sans)", marginBottom: 4 }}>{s.label}</div>
+                  <div style={{ fontSize: 26, fontWeight: 500, color: s.color, fontFamily: "var(--font-sans)" }}>{s.value}</div>
+                </div>
+              ))}
+            </div>
+
+            {getPriorityTasks().length === 0 ? (
+              <div style={{ background: "var(--color-background-secondary)", borderRadius: "var(--border-radius-lg)", padding: 24, textAlign: "center", fontFamily: "var(--font-sans)", color: "var(--color-text-secondary)" }}>
+                All upcoming tasks are complete — great work!
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <div style={{ fontSize: 12, fontFamily: "var(--font-sans)", color: "var(--color-text-secondary)", marginBottom: 2 }}>Next 3 months</div>
+                {getPriorityTasks().map((task, idx) => {
+                  const cat = catStyle(task.category);
+                  return (
+                    <div key={idx} style={{
+                      background: "var(--color-background-primary)",
+                      border: "0.5px solid var(--color-border-tertiary)",
+                      borderRadius: "var(--border-radius-lg)", padding: "14px 16px",
+                      display: "flex", gap: 14, alignItems: "flex-start",
+                      cursor: "pointer"
+                    }} onClick={() => { setActiveMonth(task.month); setView("calendar"); setActiveTask(task.id); }}>
+                      <div style={{ width: 28, height: 28, borderRadius: "var(--border-radius-md)", background: PRIORITY_COLORS[task.priority]?.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0 }}>
+                        {task.priority === "critical" ? "🔴" : task.priority === "high" ? "🟡" : "🟢"}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 3 }}>
+                          <span style={{ fontFamily: "var(--font-sans)", fontSize: 14, fontWeight: 500, color: "var(--color-text-primary)" }}>{task.title}</span>
+                          <span style={{ fontSize: 11, fontFamily: "var(--font-sans)", padding: "2px 8px", borderRadius: 99, background: cat.bg, color: cat.text }}>{cat.label}</span>
+                        </div>
+                        <div style={{ fontSize: 12, color: "var(--color-text-secondary)", fontFamily: "var(--font-sans)" }}>{FULL_MONTHS[task.month]} · {task.cost}</div>
+                        <div style={{ fontSize: 12, color: "var(--color-text-tertiary)", fontFamily: "var(--font-sans)", marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{task.timing}</div>
+                      </div>
+                      <span style={{ fontSize: 12, color: "var(--color-text-secondary)", fontFamily: "var(--font-sans)", flexShrink: 0 }}>View →</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Multi-year overview */}
+            <div style={{ marginTop: 28 }}>
+              <h3 style={{ fontSize: 16, fontWeight: 500, margin: "0 0 12px" }}>Multi-year roadmap</h3>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 8 }}>
+                {[1,2,3,4,5].map(y => {
+                  const tasks = TASK_CATALOG.filter(t => t.recurrYears.includes(y));
+                  const focus = y === 1 ? "Kill & seed" : y === 2 ? "Fill & protect" : y === 3 ? "Thicken" : y === 4 ? "Mature" : "Show lawn";
+                  return (
+                    <div key={y} onClick={() => setYearOffset(y - 1)} style={{
+                      background: yearOffset + 1 === y ? "#EAF3DE" : "var(--color-background-primary)",
+                      border: `0.5px solid ${yearOffset + 1 === y ? "#1D9E75" : "var(--color-border-tertiary)"}`,
+                      borderRadius: "var(--border-radius-md)", padding: "12px", cursor: "pointer", textAlign: "center"
+                    }}>
+                      <div style={{ fontSize: 18, fontWeight: 500, fontFamily: "var(--font-sans)", color: yearOffset + 1 === y ? "#0F6E56" : "var(--color-text-primary)" }}>Y{y}</div>
+                      <div style={{ fontSize: 11, fontFamily: "var(--font-sans)", color: "var(--color-text-secondary)", marginTop: 2 }}>{focus}</div>
+                      <div style={{ fontSize: 10, fontFamily: "var(--font-sans)", color: "var(--color-text-tertiary)", marginTop: 4 }}>{tasks.length} tasks</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* SHOPPING LIST VIEW */}
+        {view === "shopping" && (
+          <div>
+            <div style={{ marginBottom: 20 }}>
+              <h2 style={{ margin: "0 0 4px", fontSize: 20, fontWeight: 500 }}>Shopping & rental list</h2>
+              <p style={{ margin: 0, fontSize: 13, color: "var(--color-text-secondary)", fontFamily: "var(--font-sans)" }}>All materials for Year {yearOffset + 1} · {BUDGET_TIERS[data.budget]}</p>
+            </div>
+
+            {(() => {
+              const allBuyItems = [];
+              getTasksThisYear().forEach(task => {
+                task.buy.forEach(b => {
+                  allBuyItems.push({
+                    ...b,
+                    taskTitle: task.title,
+                    taskMonth: task.month,
+                    category: task.category,
+                    done: isCompleted(task.id, task.month),
+                    taskId: task.id
+                  });
+                });
+              });
+
+              const byMonth = {};
+              allBuyItems.forEach(item => {
+                const m = item.taskMonth;
+                if (!byMonth[m]) byMonth[m] = [];
+                byMonth[m].push(item);
+              });
+
+              if (allBuyItems.length === 0) {
+                return <div style={{ background: "var(--color-background-secondary)", borderRadius: "var(--border-radius-lg)", padding: 24, textAlign: "center", fontFamily: "var(--font-sans)", color: "var(--color-text-secondary)" }}>No items to buy at Low budget tier — minimal equipment, manual methods only.</div>;
+              }
+
+              return Object.entries(byMonth).sort((a,b) => Number(a[0]) - Number(b[0])).map(([month, items]) => (
+                <div key={month} style={{ marginBottom: 20 }}>
+                  <div style={{ fontSize: 13, fontWeight: 500, fontFamily: "var(--font-sans)", color: "var(--color-text-secondary)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>{FULL_MONTHS[Number(month) - 1]}</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    {items.map((item, i) => {
+                      const cat = catStyle(item.category);
+                      return (
+                        <div key={i} style={{
+                          background: item.done ? "var(--color-background-secondary)" : "var(--color-background-primary)",
+                          border: "0.5px solid var(--color-border-tertiary)",
+                          borderRadius: "var(--border-radius-md)", padding: "10px 14px",
+                          display: "flex", alignItems: "flex-start", gap: 12,
+                          opacity: item.done ? 0.6 : 1
+                        }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 500, color: "var(--color-text-primary)", marginBottom: 2, textDecoration: item.done ? "line-through" : "none" }}>{item.item}</div>
+                            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                              <span style={{ fontSize: 12, fontWeight: 500, color: "#185FA5", fontFamily: "var(--font-sans)" }}>{item.price}</span>
+                              <span style={{ fontSize: 11, color: "var(--color-text-secondary)", fontFamily: "var(--font-sans)" }}>{item.where}</span>
+                            </div>
+                            <div style={{ fontSize: 11, fontFamily: "var(--font-sans)", color: cat.text, background: cat.bg, display: "inline-block", padding: "1px 7px", borderRadius: 99, marginTop: 4 }}>
+                              For: {item.taskTitle}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ));
+            })()}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
