@@ -31,7 +31,7 @@
 <body>
   <div id="app"></div>
   <script type="text/babel">
-    const { useState, useEffect, useCallback } = React;
+    const { useState, useEffect, useCallback, useRef } = React;
 
     const STORAGE_KEY = "lawn_pro_data_v2";
 
@@ -473,6 +473,8 @@
       const [activeTask, setActiveTask] = useState(null);
       const [view, setView] = useState("calendar");
       const [yearOffset, setYearOffset] = useState(0);
+      const [exportMsg, setExportMsg] = useState(null);
+      const importRef = useRef(null);
 
       const currentYear = data.year + yearOffset;
 
@@ -531,6 +533,45 @@
 
       const catStyle = (cat) => CATEGORY_COLORS[cat] || CATEGORY_COLORS.maintenance;
 
+      const exportData = () => {
+        const json = JSON.stringify(data, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const date = new Date().toISOString().slice(0, 10);
+        const filename = `lawn-pro-backup-${date}.json`;
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        setExportMsg(filename);
+        setTimeout(() => {
+          const subject = encodeURIComponent('Lawn Pro Calendar Backup');
+          const body = encodeURIComponent(`Attach the downloaded file "${filename}" to transfer your lawn care progress to another device.`);
+          window.open(`mailto:?subject=${subject}&body=${body}`);
+        }, 400);
+      };
+
+      const importData = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          try {
+            const parsed = JSON.parse(ev.target.result);
+            if (window.confirm('Replace all current progress and notes with the imported data?')) {
+              setData({ ...defaultData(), ...parsed });
+            }
+          } catch {
+            alert('Could not read the file. Make sure it is a Lawn Pro backup (.json).');
+          }
+          e.target.value = '';
+        };
+        reader.readAsText(file);
+      };
+
       return (
         <div style={{ fontFamily: "'Georgia', serif", minHeight: "100vh", background: "var(--color-background-tertiary)", padding: "0 0 60px" }}>
 
@@ -562,17 +603,37 @@
             </div>
 
             {/* Nav */}
-            <div style={{ display: "flex", gap: 4, marginTop: 14, fontFamily: "var(--font-sans)" }}>
-              {[["calendar", "📅 Calendar"], ["priorities", "⭐ Priorities"], ["shopping", "🛒 Shopping List"]].map(([k, v]) => (
-                <button key={k} onClick={() => setView(k)} style={{
-                  padding: "6px 14px", fontSize: 13, borderRadius: "var(--border-radius-md)",
-                  background: view === k ? "var(--color-background-info)" : "transparent",
-                  color: view === k ? "var(--color-text-info)" : "var(--color-text-secondary)",
-                  border: view === k ? "0.5px solid var(--color-border-info)" : "0.5px solid transparent",
-                  fontWeight: view === k ? 500 : 400
-                }}>{v}</button>
-              ))}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 4, marginTop: 14, fontFamily: "var(--font-sans)", flexWrap: "wrap" }}>
+              <div style={{ display: "flex", gap: 4 }}>
+                {[["calendar", "📅 Calendar"], ["priorities", "⭐ Priorities"], ["shopping", "🛒 Shopping List"]].map(([k, v]) => (
+                  <button key={k} onClick={() => setView(k)} style={{
+                    padding: "6px 14px", fontSize: 13, borderRadius: "var(--border-radius-md)",
+                    background: view === k ? "var(--color-background-info)" : "transparent",
+                    color: view === k ? "var(--color-text-info)" : "var(--color-text-secondary)",
+                    border: view === k ? "0.5px solid var(--color-border-info)" : "0.5px solid transparent",
+                    fontWeight: view === k ? 500 : 400
+                  }}>{v}</button>
+                ))}
+              </div>
+              <div style={{ display: "flex", gap: 6 }}>
+                <input ref={importRef} type="file" accept=".json" onChange={importData} style={{ display: "none" }} />
+                <button onClick={() => importRef.current.click()} style={{
+                  padding: "6px 12px", fontSize: 12, borderRadius: "var(--border-radius-md)",
+                  background: "transparent", color: "var(--color-text-secondary)",
+                  border: "0.5px solid var(--color-border-tertiary)", cursor: "pointer"
+                }}>⬆ Import</button>
+                <button onClick={exportData} style={{
+                  padding: "6px 12px", fontSize: 12, borderRadius: "var(--border-radius-md)",
+                  background: "#1D9E75", color: "#fff", border: "none", cursor: "pointer", fontWeight: 500
+                }}>⬇ Export</button>
+              </div>
             </div>
+            {exportMsg && (
+              <div style={{ marginTop: 10, padding: "8px 12px", background: "#EAF3DE", borderRadius: "var(--border-radius-md)", fontSize: 12, fontFamily: "var(--font-sans)", color: "#3B6D11", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span>✓ <strong>{exportMsg}</strong> downloaded — your email client should open. Attach the file and send it to yourself.</span>
+                <button onClick={() => setExportMsg(null)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, color: "#3B6D11", padding: "0 0 0 8px" }}>×</button>
+              </div>
+            )}
           </div>
 
           {/* Year progress bar */}
@@ -632,6 +693,7 @@
                       const done = isCompleted(task.id, task.month);
                       const cat = catStyle(task.category);
                       const isOpen = activeTask === task.id;
+                      const noteKey = getTaskKey(task.id, currentYear, task.month);
 
                       return (
                         <div key={task.id} style={{
@@ -669,6 +731,7 @@
                                 </span>
                               </div>
                               <div style={{ fontSize: 12, fontFamily: "var(--font-sans)", color: "var(--color-text-secondary)" }}>{task.timing} · {task.cost}</div>
+                              {data.notes[noteKey] && <div style={{ fontSize: 11, fontFamily: "var(--font-sans)", color: "var(--color-text-tertiary)", marginTop: 3 }}>📝 Note saved</div>}
                             </div>
                             <span style={{ color: "var(--color-text-tertiary)", fontSize: 16, flexShrink: 0, fontFamily: "var(--font-sans)" }}>{isOpen ? "▲" : "▼"}</span>
                           </div>
@@ -701,6 +764,23 @@
                                   <div style={{ fontSize: 10, fontWeight: 500, color: "#854F0B", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>What to expect</div>
                                   <p style={{ margin: 0, fontSize: 12, color: "#633806", lineHeight: 1.5 }}>{task.expectation}</p>
                                 </div>
+                              </div>
+
+                              <div style={{ marginBottom: 12 }}>
+                                <div style={{ fontSize: 11, fontWeight: 500, color: "var(--color-text-secondary)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>My notes</div>
+                                <textarea
+                                  value={data.notes[noteKey] || ""}
+                                  onChange={e => setData(d => ({ ...d, notes: { ...d.notes, [noteKey]: e.target.value } }))}
+                                  placeholder="Document what you did, what you observed, products used, dates, weather conditions…"
+                                  rows={3}
+                                  style={{
+                                    width: "100%", fontSize: 12, fontFamily: "var(--font-sans)",
+                                    padding: "8px 10px", borderRadius: "var(--border-radius-md)",
+                                    border: "0.5px solid var(--color-border-tertiary)",
+                                    background: "var(--color-background-secondary)",
+                                    color: "var(--color-text-primary)", resize: "vertical", lineHeight: 1.5
+                                  }}
+                                />
                               </div>
 
                               <button
