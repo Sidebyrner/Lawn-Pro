@@ -40,6 +40,26 @@
 
     const BUDGET_TIERS = { low: "Low ($100–$400)", medium: "Medium ($400–$900)", high: "High ($900–$2000+)" };
 
+    const SHOP_CATS = ["timeline","seed","sprays","topdressings","equipment","fertilizer"];
+
+    const SHOP_CAT_LABELS = {
+      timeline:     { label: "Timeline",     icon: "🗓" },
+      seed:         { label: "Seed",         icon: "🌱" },
+      sprays:       { label: "Sprays",       icon: "🧪" },
+      topdressings: { label: "Topdressings", icon: "🪣" },
+      equipment:    { label: "Equipment",    icon: "🔧" },
+      fertilizer:   { label: "Fertilizer",  icon: "⚗️" },
+    };
+
+    const BUDGET_TIER_ICON = {
+      low:    { badge: "$",   color: "#1D9E75", bg: "#E1F5EE", title: "Low budget" },
+      medium: { badge: "$$",  color: "#BA7517", bg: "#FAEEDA", title: "Medium budget" },
+      high:   { badge: "$$$", color: "#A32D2D", bg: "#FCEBEB", title: "High budget only" },
+    };
+
+    const itemBudgetTier = (taskBudget) =>
+      taskBudget.includes("low") ? "low" : taskBudget.includes("medium") ? "medium" : "high";
+
     const TASK_CATALOG = [
       {
         id: "soil_test",
@@ -50,7 +70,7 @@
         budget: ["low","medium","high"],
         cost: "$26",
         description: "Order and submit MSU Extension soil test mailer. Take 10 sub-samples to 3\" depth, mix, air-dry overnight, mail to MSU lab.",
-        buy: [{ item: "MSU Soil Test Mailer", price: "$26", where: "spartanspiritshop.msu.edu or Oakland County MSU Extension" }],
+        buy: [{ item: "MSU Soil Test Mailer", price: "$26", where: "spartanspiritshop.msu.edu or Oakland County MSU Extension", shopCat: "topdressings" }],
         outcome: "Know your pH, organic matter, P, K. Essential before buying any amendment.",
         expectation: "Results in ~10 days. Detroit clay-loam often pH 6.5–7.5. May show need for sulfur (if pH >7.5) rather than lime.",
         timing: "Early March — as soon as ground thaws",
@@ -67,9 +87,9 @@
         cost: "$30–$95",
         description: "Spot-treat emerged dandelions with SpeedZone or Triplet SF on a 65°F+ calm day. Do NOT apply pre-emergent to any area you plan to seed in fall.",
         buy: [
-          { item: "SpeedZone (1 gal)", price: "$95–$135", where: "SiteOne Madison Heights / DoMyOwn" },
-          { item: "OR Triplet SF (1 gal)", price: "$60–$85", where: "SiteOne Madison Heights / DoMyOwn" },
-          { item: "Pump sprayer (2 gal)", price: "$25–$40", where: "Home Depot / Ace Hardware" }
+          { item: "SpeedZone (1 gal)", price: "$95–$135", where: "SiteOne Madison Heights / DoMyOwn", shopCat: "sprays" },
+          { item: "OR Triplet SF (1 gal)", price: "$60–$85", where: "SiteOne Madison Heights / DoMyOwn", shopCat: "sprays" },
+          { item: "Pump sprayer (2 gal)", price: "$25–$40", where: "Home Depot / Ace Hardware", shopCat: "equipment" }
         ],
         outcome: "80–90% dandelion kill on treated areas. SpeedZone shows results in 3–5 days.",
         expectation: "Some regrowth from deep tap roots. Follow up in fall (September/October) for root-kill timing.",
@@ -87,8 +107,8 @@
         cost: "$25–$110",
         description: "Apply prodiamine or pendimethalin only to mature turf areas you are NOT renovating. DO NOT apply where you plan to seed in fall — it will block germination for 3-4 months.",
         buy: [
-          { item: "Scotts Halts (pendimethalin)", price: "$25–$35 / 5,000 sq ft", where: "Home Depot / Lowe's / Menards" },
-          { item: "OR Quali-Pro Prodiamine 65 WDG (5 lb)", price: "$80–$110 (multi-year supply)", where: "SiteOne Madison Heights / DoMyOwn" }
+          { item: "Scotts Halts (pendimethalin)", price: "$25–$35 / 5,000 sq ft", where: "Home Depot / Lowe's / Menards", shopCat: "sprays" },
+          { item: "OR Quali-Pro Prodiamine 65 WDG (5 lb)", price: "$80–$110 (multi-year supply)", where: "SiteOne Madison Heights / DoMyOwn", shopCat: "sprays" }
         ],
         outcome: "Prevents 90%+ of crabgrass germination in treated zones for the season.",
         expectation: "Apply when forsythia drops blooms or soil hits 50–55°F (GDD32=250 at gddtracker.msu.edu with zip 48072). Miss this window and it's useless.",
@@ -105,7 +125,7 @@
         budget: ["low","medium","high"],
         cost: "$0–$15",
         description: "Set mower to 3\" (spring) and 3.5\" (summer). Sharpen blade now if not done in fall. Never remove more than ⅓ of blade height per cut.",
-        buy: [{ item: "Blade sharpening file or service", price: "$0–$15", where: "Home Depot / local small engine shop" }],
+        buy: [{ item: "Blade sharpening file or service", price: "$0–$15", where: "Home Depot / local small engine shop", shopCat: "equipment" }],
         outcome: "Sharp blade prevents tearing that invites fungal disease. Taller mowing shades out crabgrass seedlings.",
         expectation: "Mowing at 3–3.5\" is the single cheapest crabgrass suppression tool available.",
         timing: "Before first mow of season",
@@ -122,9 +142,9 @@
         cost: "$70–$155",
         description: "Walk the lawn weekly. Spot-spray any crabgrass escapes with Tenacity (mesotrione) at post-emergent rate. Add NIS surfactant for post-emergent applications.",
         buy: [
-          { item: "Tenacity 8 oz (mesotrione)", price: "$67–$80", where: "SiteOne Madison Heights / DoMyOwn / online" },
-          { item: "OR Drive XLR8 64 oz (quinclorac)", price: "$69–$155", where: "DoMyOwn / SiteOne" },
-          { item: "Non-ionic surfactant (NIS)", price: "$10–$15", where: "SiteOne / Tractor Supply" }
+          { item: "Tenacity 8 oz (mesotrione)", price: "$67–$80", where: "SiteOne Madison Heights / DoMyOwn / online", shopCat: "sprays" },
+          { item: "OR Drive XLR8 64 oz (quinclorac)", price: "$69–$155", where: "DoMyOwn / SiteOne", shopCat: "sprays" },
+          { item: "Non-ionic surfactant (NIS)", price: "$10–$15", where: "SiteOne / Tractor Supply", shopCat: "sprays" }
         ],
         outcome: "Tenacity turns crabgrass white within 5–7 days; full kill in 2–3 weeks. Best on crabgrass in tiller stage.",
         expectation: "Expect 1–3 spot treatments needed. Crabgrass won't be fully eradicated until the September kill.",
@@ -142,8 +162,8 @@
         cost: "$30–$200",
         description: "Water 1–1.5\" per week total (including rain). Apply in 2–3 deep sessions, not daily sprinkles. Water 4–8 AM only. Use tuna can test to calibrate sprinkler output.",
         buy: [
-          { item: "Oscillating sprinkler", price: "$15–$40", where: "Home Depot / Menards" },
-          { item: "Orbit B-hyve hose timer (optional)", price: "$50–$80", where: "Home Depot / Amazon" }
+          { item: "Oscillating sprinkler", price: "$15–$40", where: "Home Depot / Menards", shopCat: "equipment" },
+          { item: "Orbit B-hyve hose timer (optional)", price: "$50–$80", where: "Home Depot / Amazon", shopCat: "equipment" }
         ],
         outcome: "Deep watering trains roots downward, improving drought tolerance. Daily light watering = shallow roots = summer burnout.",
         expectation: "July is typically the driest month in Berkley. Expect 2–3 supplemental inches/month during heat waves.",
@@ -161,8 +181,8 @@
         cost: "$55–$170",
         description: "Apply glyphosate to entire renovation area. Use plain glyphosate only — NO 'Extended Control' or 'Dual Action' formulas (they have soil residuals). Wait 7–14 days for full kill confirmation.",
         buy: [
-          { item: "Generic 41% glyphosate 2.5 gal (Credit 41 / GlyStar / Ranger Pro)", price: "$55–$80", where: "SiteOne Madison Heights / DoMyOwn" },
-          { item: "Backpack sprayer 4 gal", price: "$60–$100", where: "Home Depot / SiteOne" }
+          { item: "Generic 41% glyphosate 2.5 gal (Credit 41 / GlyStar / Ranger Pro)", price: "$55–$80", where: "SiteOne Madison Heights / DoMyOwn", shopCat: "sprays" },
+          { item: "Backpack sprayer 4 gal", price: "$60–$100", where: "Home Depot / SiteOne", shopCat: "equipment" }
         ],
         outcome: "Full kill of all existing vegetation including crabgrass. Lawn turns brown in 7–10 days.",
         expectation: "Dense crabgrass may need a second pass 10–14 days after first. DO NOT use any glyphosate with soil residual (Roundup Extended Control, etc.).",
@@ -180,13 +200,13 @@
         cost: "$300–$800+",
         description: "Order seed, Tenacity, starter fertilizer, and topdressing mix BEFORE renovation weekend. Book equipment rental at Home Depot Royal Oak / Madison Heights for your target Saturday. Rentals book out 3+ weeks in advance in September.",
         buy: [
-          { item: "Elite KBG seed (GCI Blue Heat 10 lb)", price: "$79.95", where: "gciturfacademy.com" },
-          { item: "OR Jonathan Green Blue Panther 25 lb", price: "$130–$160", where: "Ace Hardware / Home Depot" },
-          { item: "OR Jonathan Green Black Beauty Ultra 25 lb", price: "$129.99", where: "Home Depot / Walmart" },
-          { item: "Starter fertilizer (Andersons 20-27-5 or Scotts 24-25-4)", price: "$25–$30 each", where: "SiteOne / Home Depot" },
-          { item: "Tenacity 8 oz + NIS surfactant", price: "$77–$95", where: "DoMyOwn / SiteOne" },
-          { item: "Bulk topdressing (2 yd 50/50 sand-topsoil delivered)", price: "$150–$200", where: "Redford Topsoil / Angelo's / In-N-Out Topsoil" },
-          { item: "Straw mulch (1–2 bales)", price: "$8–$12 per bale", where: "Home Depot / Tractor Supply" }
+          { item: "Elite KBG seed (GCI Blue Heat 10 lb)", price: "$79.95", where: "gciturfacademy.com", shopCat: "seed" },
+          { item: "OR Jonathan Green Blue Panther 25 lb", price: "$130–$160", where: "Ace Hardware / Home Depot", shopCat: "seed" },
+          { item: "OR Jonathan Green Black Beauty Ultra 25 lb", price: "$129.99", where: "Home Depot / Walmart", shopCat: "seed" },
+          { item: "Starter fertilizer (Andersons 20-27-5 or Scotts 24-25-4)", price: "$25–$30 each", where: "SiteOne / Home Depot", shopCat: "fertilizer" },
+          { item: "Tenacity 8 oz + NIS surfactant", price: "$77–$95", where: "DoMyOwn / SiteOne", shopCat: "sprays" },
+          { item: "Bulk topdressing (2 yd 50/50 sand-topsoil delivered)", price: "$150–$200", where: "Redford Topsoil / Angelo's / In-N-Out Topsoil", shopCat: "topdressings" },
+          { item: "Straw mulch (1–2 bales)", price: "$8–$12 per bale", where: "Home Depot / Tractor Supply", shopCat: "topdressings" }
         ],
         outcome: "Everything staged and ready for renovation weekend.",
         expectation: "Do not buy seed at big-box stores without reading the label — avoid K-31 tall fescue and any coated 'Smart Seed' that is 50% filler by weight.",
@@ -204,10 +224,10 @@
         cost: "$143–$230",
         description: "Reserve at homedepot.com/rentals (zip 48072) or call Home Depot Royal Oak / Madison Heights. Pick up at 7 AM Saturday, return by 11 AM to pay only the 4-hour rate.",
         buy: [
-          { item: "Core aerator (Classen CA-18, 4-hr)", price: "$73–$87", where: "Home Depot Tool Rental — book online" },
-          { item: "Power rake / dethatcher (4-hr)", price: "$50–$65", where: "Home Depot Tool Rental — book online" },
-          { item: "Lawn roller water-fill (4-hr)", price: "$18–$25", where: "Home Depot Tool Rental — book online" },
-          { item: "Slit seeder (optional upgrade, daily)", price: "$120–$140", where: "Home Depot / Sunbelt Rentals" }
+          { item: "Core aerator (Classen CA-18, 4-hr)", price: "$73–$87", where: "Home Depot Tool Rental — book online", shopCat: "equipment" },
+          { item: "Power rake / dethatcher (4-hr)", price: "$50–$65", where: "Home Depot Tool Rental — book online", shopCat: "equipment" },
+          { item: "Lawn roller water-fill (4-hr)", price: "$18–$25", where: "Home Depot Tool Rental — book online", shopCat: "equipment" },
+          { item: "Slit seeder (optional upgrade, daily)", price: "$120–$140", where: "Home Depot / Sunbelt Rentals", shopCat: "equipment" }
         ],
         outcome: "One Saturday = full renovation. Core aeration breaks clay, power rake removes thatch, roller presses seed into soil contact.",
         expectation: "Book 3+ weeks ahead. Peak Saturday slots in August/September sell out. Call Ashmore Rentals Madison Heights (248-588-3300) for potentially lower rates.",
@@ -225,7 +245,7 @@
         cost: "See above line items",
         description: "The main event. Full sequence: (1) Scalp-mow dead lawn. (2) Power rake to expose 50%+ bare soil. (3) Core aerate 2 perpendicular passes. (4) Spread topdressing, rake level with leveling rake. (5) Broadcast seed. (6) Apply starter fertilizer. (7) Spray Tenacity at seeding rate (NO surfactant). (8) Run half-filled roller in one pass. (9) Optional light straw mulch on slopes.",
         buy: [
-          { item: "36\" Leveling rake (VEVOR/Gardease)", price: "$45–$70", where: "Amazon / SiteOne" }
+          { item: "36\" Leveling rake (VEVOR/Gardease)", price: "$45–$70", where: "Amazon / SiteOne", shopCat: "equipment" }
         ],
         outcome: "Seedbed prepared, seed placed, weed suppression active, nutrition ready. Germination begins in 7–14 days for KBG.",
         expectation: "Expect 4–6 weeks of careful watering before first mow. KBG is slow to germinate (14–30 days) — do not panic. Ryegrass in the mix will show first.",
@@ -259,8 +279,8 @@
         cost: "$25–$60",
         description: "Apply fall fertilizer at 0.75–1.0 lb N per 1,000 sq ft using a 24-0-11 or 32-0-4 formula. This builds root mass and carbohydrate reserves for winter and spring green-up. Note: Michigan law requires 0-P fertilizer except during new lawn establishment.",
         buy: [
-          { item: "Lesco 24-0-11 (50 lb / 12,000 sq ft)", price: "$35–$50", where: "SiteOne Madison Heights" },
-          { item: "OR Scotts Turf Builder 32-0-4", price: "$25–$35", where: "Home Depot / Lowe's" }
+          { item: "Lesco 24-0-11 (50 lb / 12,000 sq ft)", price: "$35–$50", where: "SiteOne Madison Heights", shopCat: "fertilizer" },
+          { item: "OR Scotts Turf Builder 32-0-4", price: "$25–$35", where: "Home Depot / Lowe's", shopCat: "fertilizer" }
         ],
         outcome: "Deep green color through fall, faster spring green-up, stronger root system that competes with weeds.",
         expectation: "The fall N program (Labor Day + mid-October + dormant feed) is more impactful than any spring feeding. Do not skip.",
@@ -278,7 +298,7 @@
         cost: "$60–$135",
         description: "Best broadleaf herbicide timing of the year. Dandelions are translocating carbohydrates to roots for winter storage — herbicide travels with them and kills root system. Spray established turf areas (not new seedlings) with SpeedZone.",
         buy: [
-          { item: "SpeedZone 1 gal", price: "$95–$135", where: "SiteOne Madison Heights / DoMyOwn" }
+          { item: "SpeedZone 1 gal", price: "$95–$135", where: "SiteOne Madison Heights / DoMyOwn", shopCat: "sprays" }
         ],
         outcome: "Far more effective root-kill than spring application. Expect 90%+ kill on treated plants within 2–3 weeks.",
         expectation: "New turf from August seeding must be mowed 2+ times before SpeedZone application. Check label for minimum establishment period.",
@@ -296,7 +316,7 @@
         cost: "$25–$50",
         description: "Second fall fertilizer application at 0.75 lb N per 1,000 sq ft. Same product as Labor Day feed. Apply even if grass has slowed growing — roots are still active.",
         buy: [
-          { item: "Lesco 24-0-11 or Scotts 32-0-4", price: "$25–$50", where: "SiteOne / Home Depot" }
+          { item: "Lesco 24-0-11 or Scotts 32-0-4", price: "$25–$50", where: "SiteOne / Home Depot", shopCat: "fertilizer" }
         ],
         outcome: "Stacks with Labor Day feed to build maximum root reserves for spring.",
         expectation: "If budget is tight, Labor Day feed > mid-October feed > spring feed in terms of KBG impact.",
@@ -330,7 +350,7 @@
         cost: "$15–$25",
         description: "Apply urea 46-0-0 at ~1 lb product per 1,000 sq ft after top growth has stopped but before ground freezes. Michigan law: do NOT apply to frozen or saturated soil. Sweep all granules off sidewalk/driveway immediately.",
         buy: [
-          { item: "Urea 46-0-0 granular (10–20 lb)", price: "$15–$25", where: "SiteOne / Tractor Supply / local feed store" }
+          { item: "Urea 46-0-0 granular (10–20 lb)", price: "$15–$25", where: "SiteOne / Tractor Supply / local feed store", shopCat: "fertilizer" }
         ],
         outcome: "Provides stored N that becomes available for early spring green-up without promoting growth that winter will kill.",
         expectation: "Optional but measurably improves spring color and density. Skip if ground is already frozen.",
@@ -364,7 +384,7 @@
         cost: "$30–$80",
         description: "Fill in thin or bare spots that didn't establish well. Small patches only — rake lightly, broadcast seed at 2x rate, topdress lightly, water. KBG is still filling via rhizomes.",
         buy: [
-          { item: "Elite KBG seed (2–3 lb)", price: "$30–$50", where: "gciturfacademy.com / SiteOne" }
+          { item: "Elite KBG seed (2–3 lb)", price: "$30–$50", where: "gciturfacademy.com / SiteOne", shopCat: "seed" }
         ],
         outcome: "Fills visible gaps before crabgrass seeds occupy them.",
         expectation: "Year 2 KBG will look significantly better than Year 1. Rhizome spread is visibly filling in bare spots by June.",
@@ -382,8 +402,8 @@
         cost: "$80–$110",
         description: "NOW you can run a full prodiamine pre-emergent program across the entire mature lawn. Apply at GDD32 = 250 (gddtracker.msu.edu zip 48072). This is the year the crabgrass fight really gets won.",
         buy: [
-          { item: "Quali-Pro Prodiamine 65 WDG (5 lb jug — 5-year supply)", price: "$80–$110", where: "SiteOne Madison Heights / DoMyOwn" },
-          { item: "Broadcast spreader (if not owned)", price: "$30–$80", where: "Home Depot / Menards" }
+          { item: "Quali-Pro Prodiamine 65 WDG (5 lb jug — 5-year supply)", price: "$80–$110", where: "SiteOne Madison Heights / DoMyOwn", shopCat: "sprays" },
+          { item: "Broadcast spreader (if not owned)", price: "$30–$80", where: "Home Depot / Menards", shopCat: "equipment" }
         ],
         outcome: "90%+ crabgrass prevention across the full lawn. Year 2 is when the weed pressure dramatically drops.",
         expectation: "Combined with the fall kill from year 1, crabgrass population drops 85–95% by end of year 2.",
@@ -401,7 +421,7 @@
         cost: "$73–$123",
         description: "Annual fall aeration is the single best maintenance practice for clay-heavy Berkley soil. Relieves compaction, improves water penetration, reduces thatch, and opens channels for topdressing and fertilizer.",
         buy: [
-          { item: "Core aerator rental (4-hr or daily)", price: "$73–$123", where: "Home Depot Tool Rental" }
+          { item: "Core aerator rental (4-hr or daily)", price: "$73–$123", where: "Home Depot Tool Rental", shopCat: "equipment" }
         ],
         outcome: "Measurably improved drainage and root depth each year. Compaction is the #1 silent lawn killer on Detroit clay.",
         expectation: "Leave cores on surface to break down — they return organic matter. Or rake into low spots as topdressing.",
@@ -419,7 +439,7 @@
         cost: "$50–$200",
         description: "Apply ¼\" of 40/40/20 sand-topsoil-compost mix to remaining bumps and low spots. Never bury more than ½\" of grass blade per application. Persistent spots need 2–3 annual cycles.",
         buy: [
-          { item: "Bulk topdressing 1 yd (50/50 sand-topsoil)", price: "$75–$150 delivered", where: "Redford Topsoil / Angelo's Supplies" }
+          { item: "Bulk topdressing 1 yd (50/50 sand-topsoil)", price: "$75–$150 delivered", where: "Redford Topsoil / Angelo's Supplies", shopCat: "topdressings" }
         ],
         outcome: "Cumulative leveling over 2–3 years produces a smooth, fairway-quality surface.",
         expectation: "Bumps and ruts that needed 3–4\" of fill cannot be corrected in one season without killing existing grass.",
@@ -487,6 +507,7 @@
       const [view, setView] = useState("calendar");
       const [yearOffset, setYearOffset] = useState(0);
       const [exportMsg, setExportMsg] = useState(null);
+      const [shopSubview, setShopSubview] = useState("timeline");
       const importRef = useRef(null);
 
       const currentYear = data.year + yearOffset;
@@ -908,9 +929,28 @@
             {/* SHOPPING LIST VIEW */}
             {view === "shopping" && (
               <div>
-                <div style={{ marginBottom: 20 }}>
-                  <h2 style={{ margin: "0 0 4px", fontSize: 20, fontWeight: 500 }}>Shopping & rental list</h2>
-                  <p style={{ margin: 0, fontSize: 13, color: "var(--color-text-secondary)", fontFamily: "var(--font-sans)" }}>All materials for Year {yearOffset + 1} · {BUDGET_TIERS[data.budget]}</p>
+                <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", flexWrap: "wrap", gap: 8, marginBottom: 14 }}>
+                  <div>
+                    <h2 style={{ margin: "0 0 2px", fontSize: 20, fontWeight: 500 }}>Shopping & rental list</h2>
+                    <p style={{ margin: 0, fontSize: 13, color: "var(--color-text-secondary)", fontFamily: "var(--font-sans)" }}>Year {yearOffset + 1} · {BUDGET_TIERS[data.budget]}</p>
+                  </div>
+                </div>
+
+                {/* Subtab nav */}
+                <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginBottom: 20 }}>
+                  {SHOP_CATS.map(cat => {
+                    const { label, icon } = SHOP_CAT_LABELS[cat];
+                    const active = shopSubview === cat;
+                    return (
+                      <button key={cat} onClick={() => setShopSubview(cat)} style={{
+                        padding: "6px 12px", fontSize: 12, borderRadius: "var(--border-radius-md)",
+                        background: active ? "var(--color-background-info)" : "transparent",
+                        color: active ? "var(--color-text-info)" : "var(--color-text-secondary)",
+                        border: active ? "0.5px solid var(--color-border-info)" : "0.5px solid var(--color-border-tertiary)",
+                        fontWeight: active ? 500 : 400, cursor: "pointer", fontFamily: "var(--font-sans)"
+                      }}>{icon} {label}</button>
+                    );
+                  })}
                 </div>
 
                 {(() => {
@@ -921,22 +961,31 @@
                         ...b,
                         taskTitle: task.title,
                         taskMonth: task.month,
-                        category: task.category,
+                        taskCategory: task.category,
+                        taskBudget: task.budget,
                         done: isCompleted(task.id, task.month),
                         taskId: task.id
                       });
                     });
                   });
 
+                  const visibleItems = shopSubview === "timeline"
+                    ? allBuyItems
+                    : allBuyItems.filter(i => i.shopCat === shopSubview);
+
                   const byMonth = {};
-                  allBuyItems.forEach(item => {
-                    const m = item.taskMonth;
-                    if (!byMonth[m]) byMonth[m] = [];
-                    byMonth[m].push(item);
+                  visibleItems.forEach(item => {
+                    if (!byMonth[item.taskMonth]) byMonth[item.taskMonth] = [];
+                    byMonth[item.taskMonth].push(item);
                   });
 
-                  if (allBuyItems.length === 0) {
-                    return <div style={{ background: "var(--color-background-secondary)", borderRadius: "var(--border-radius-lg)", padding: 24, textAlign: "center", fontFamily: "var(--font-sans)", color: "var(--color-text-secondary)" }}>No items to buy at Low budget tier — minimal equipment, manual methods only.</div>;
+                  if (visibleItems.length === 0) {
+                    const catLabel = SHOP_CAT_LABELS[shopSubview]?.label || shopSubview;
+                    return (
+                      <div style={{ background: "var(--color-background-secondary)", borderRadius: "var(--border-radius-lg)", padding: 24, textAlign: "center", fontFamily: "var(--font-sans)", color: "var(--color-text-secondary)" }}>
+                        No {catLabel.toLowerCase()} items for this year's budget.
+                      </div>
+                    );
                   }
 
                   return Object.entries(byMonth).sort((a,b) => Number(a[0]) - Number(b[0])).map(([month, items]) => (
@@ -944,23 +993,41 @@
                       <div style={{ fontSize: 13, fontWeight: 500, fontFamily: "var(--font-sans)", color: "var(--color-text-secondary)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>{FULL_MONTHS[Number(month) - 1]}</div>
                       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                         {items.map((item, i) => {
-                          const cat = catStyle(item.category);
+                          const cat = catStyle(item.taskCategory);
+                          const tier = itemBudgetTier(item.taskBudget);
+                          const tierInfo = BUDGET_TIER_ICON[tier];
+                          const shopCatInfo = SHOP_CAT_LABELS[item.shopCat];
                           return (
                             <div key={i} style={{
                               background: item.done ? "var(--color-background-secondary)" : "var(--color-background-primary)",
                               border: "0.5px solid var(--color-border-tertiary)",
                               borderRadius: "var(--border-radius-md)", padding: "10px 14px",
-                              display: "flex", alignItems: "flex-start", gap: 12,
-                              opacity: item.done ? 0.6 : 1
+                              display: "flex", alignItems: "flex-start", gap: 10,
+                              opacity: item.done ? 0.55 : 1
                             }}>
+                              {/* Budget tier badge */}
+                              <div title={tierInfo.title} style={{
+                                flexShrink: 0, marginTop: 1,
+                                fontSize: 10, fontWeight: 700, fontFamily: "var(--font-sans)",
+                                color: tierInfo.color, background: tierInfo.bg,
+                                border: `0.5px solid ${tierInfo.color}`,
+                                borderRadius: 4, padding: "2px 5px", lineHeight: 1, whiteSpace: "nowrap"
+                              }}>{tierInfo.badge}</div>
                               <div style={{ flex: 1, minWidth: 0 }}>
                                 <div style={{ fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 500, color: "var(--color-text-primary)", marginBottom: 2, textDecoration: item.done ? "line-through" : "none" }}>{item.item}</div>
                                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
                                   <span style={{ fontSize: 12, fontWeight: 500, color: "#185FA5", fontFamily: "var(--font-sans)" }}>{item.price}</span>
                                   <span style={{ fontSize: 11, color: "var(--color-text-secondary)", fontFamily: "var(--font-sans)" }}>{item.where}</span>
                                 </div>
-                                <div style={{ fontSize: 11, fontFamily: "var(--font-sans)", color: cat.text, background: cat.bg, display: "inline-block", padding: "1px 7px", borderRadius: 99, marginTop: 4 }}>
-                                  For: {item.taskTitle}
+                                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 5, alignItems: "center" }}>
+                                  <span style={{ fontSize: 11, fontFamily: "var(--font-sans)", color: cat.text, background: cat.bg, border: `0.5px solid ${cat.border}`, display: "inline-block", padding: "1px 7px", borderRadius: 99 }}>
+                                    {item.taskTitle}
+                                  </span>
+                                  {shopSubview === "timeline" && shopCatInfo && (
+                                    <span style={{ fontSize: 11, fontFamily: "var(--font-sans)", color: "var(--color-text-tertiary)" }}>
+                                      {shopCatInfo.icon} {shopCatInfo.label}
+                                    </span>
+                                  )}
                                 </div>
                               </div>
                             </div>
