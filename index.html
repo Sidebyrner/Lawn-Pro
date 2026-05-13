@@ -444,11 +444,24 @@
       medium: { bg: "#EAF3DE", text: "#3B6D11", dot: "#63992" }
     };
 
+    const ZONES = [
+      "1a","1b","2a","2b","3a","3b","4a","4b","5a","5b","6a","6b",
+      "7a","7b","8a","8b","9a","9b","10a","10b","11a","11b","12a","12b","13a","13b"
+    ];
+
+    const GRASS_TYPES = {
+      "Cool-Season": ["Bentgrass","Kentucky Bluegrass","Perennial Ryegrass","Fine Fescue","Tall Fescue"],
+      "Warm-Season": ["Bahia","Bermuda","Centipede","St. Augustine","Zoysia"],
+    };
+
     const defaultData = () => ({
       year: new Date().getFullYear(),
       budget: "medium",
       completedTasks: {},
       notes: {},
+      location: "Berkley, MI",
+      zone: "6a",
+      grassType: "Kentucky Bluegrass",
     });
 
     function loadData() {
@@ -589,7 +602,7 @@
                   <span style={{ fontSize: 22, lineHeight: 1 }}>🌿</span>
                   <div>
                     <h1 style={{ margin: 0, fontSize: 20, fontWeight: 500, color: "var(--color-text-primary)", letterSpacing: "-0.3px" }}>Lawn Pro Calendar</h1>
-                    <p style={{ margin: 0, fontSize: 12, color: "var(--color-text-secondary)", fontFamily: "var(--font-sans)" }}>Berkley, MI · Zone 6a · Kentucky Bluegrass</p>
+                    <p style={{ margin: 0, fontSize: 12, color: "var(--color-text-secondary)", fontFamily: "var(--font-sans)" }}>{data.location} · Zone {data.zone} · {data.grassType}</p>
                   </div>
                 </div>
               </div>
@@ -611,7 +624,7 @@
             {/* Nav */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 4, marginTop: 14, fontFamily: "var(--font-sans)", flexWrap: "wrap" }}>
               <div style={{ display: "flex", gap: 4 }}>
-                {[["calendar", "📅 Calendar"], ["priorities", "⭐ Priorities"], ["shopping", "🛒 Shopping List"], ["notes", "📝 Notes"]].map(([k, v]) => (
+                {[["calendar", "📅 Calendar"], ["priorities", "⭐ Priorities"], ["shopping", "🛒 Shopping List"], ["notes", "📝 Notes"], ["settings", "⚙️ Settings"]].map(([k, v]) => (
                   <button key={k} onClick={() => setView(k)} style={{
                     padding: "6px 14px", fontSize: 13, borderRadius: "var(--border-radius-md)",
                     background: view === k ? "var(--color-background-info)" : "transparent",
@@ -1005,6 +1018,110 @@
                 </div>
               );
             })()}
+
+            {/* SETTINGS TAB VIEW */}
+            {view === "settings" && (
+              <div>
+                <div style={{ marginBottom: 20 }}>
+                  <h2 style={{ margin: "0 0 4px", fontSize: 20, fontWeight: 500 }}>Settings</h2>
+                  <p style={{ margin: 0, fontSize: 13, color: "var(--color-text-secondary)", fontFamily: "var(--font-sans)" }}>Changes are saved automatically and reflected in the header.</p>
+                </div>
+                <div style={{ display: "flex", gap: 32, alignItems: "flex-start" }}>
+                  {/* Left: form controls */}
+                  <div style={{ width: 340, flexShrink: 0, display: "flex", flexDirection: "column", gap: 24 }}>
+
+                    {/* Location */}
+                    <div>
+                      <div style={{ fontSize: 11, fontWeight: 500, color: "var(--color-text-secondary)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6, fontFamily: "var(--font-sans)" }}>📍 Location</div>
+                      <input
+                        type="text"
+                        value={data.location}
+                        onChange={e => setData(d => ({ ...d, location: e.target.value }))}
+                        placeholder="City, State"
+                        style={{ width: "100%", fontSize: 13, padding: "7px 10px", borderRadius: "var(--border-radius-md)", border: "0.5px solid var(--color-border-tertiary)", fontFamily: "var(--font-sans)", color: "var(--color-text-primary)", background: "var(--color-background-primary)" }}
+                      />
+                    </div>
+
+                    {/* Zone */}
+                    <div>
+                      <div style={{ fontSize: 11, fontWeight: 500, color: "var(--color-text-secondary)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6, fontFamily: "var(--font-sans)" }}>🌡 USDA Hardiness Zone</div>
+                      <select
+                        value={data.zone}
+                        onChange={e => setData(d => ({ ...d, zone: e.target.value }))}
+                        style={{ width: "100%", fontSize: 13, padding: "7px 10px", borderRadius: "var(--border-radius-md)", border: "0.5px solid var(--color-border-tertiary)", fontFamily: "var(--font-sans)", color: "var(--color-text-primary)", background: "var(--color-background-primary)" }}
+                      >
+                        {ZONES.map(z => <option key={z} value={z}>Zone {z}</option>)}
+                      </select>
+                      <div style={{ fontSize: 11, color: "var(--color-text-tertiary)", fontFamily: "var(--font-sans)", marginTop: 5 }}>Use the map on the right to find your zone.</div>
+                    </div>
+
+                    {/* Grass type */}
+                    <div>
+                      <div style={{ fontSize: 11, fontWeight: 500, color: "var(--color-text-secondary)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6, fontFamily: "var(--font-sans)" }}>🌿 Grass Type</div>
+                      <select
+                        value={data.grassType}
+                        onChange={e => setData(d => ({ ...d, grassType: e.target.value }))}
+                        style={{ width: "100%", fontSize: 13, padding: "7px 10px", borderRadius: "var(--border-radius-md)", border: "0.5px solid var(--color-border-tertiary)", fontFamily: "var(--font-sans)", color: "var(--color-text-primary)", background: "var(--color-background-primary)" }}
+                      >
+                        {Object.entries(GRASS_TYPES).map(([season, grasses]) => (
+                          <optgroup key={season} label={season}>
+                            {grasses.map(g => <option key={g} value={g}>{g}</option>)}
+                          </optgroup>
+                        ))}
+                      </select>
+                      <div style={{ fontSize: 11, color: "var(--color-text-tertiary)", fontFamily: "var(--font-sans)", marginTop: 5 }}>Use the chart on the right to identify your grass type.</div>
+                    </div>
+
+                    {/* Preview */}
+                    <div style={{ background: "var(--color-background-secondary)", borderRadius: "var(--border-radius-lg)", padding: "12px 14px" }}>
+                      <div style={{ fontSize: 11, fontWeight: 500, color: "var(--color-text-secondary)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6, fontFamily: "var(--font-sans)" }}>Header preview</div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ fontSize: 16 }}>🌿</span>
+                        <div>
+                          <div style={{ fontSize: 14, fontWeight: 500, color: "var(--color-text-primary)" }}>Lawn Pro Calendar</div>
+                          <div style={{ fontSize: 12, color: "var(--color-text-secondary)", fontFamily: "var(--font-sans)" }}>{data.location} · Zone {data.zone} · {data.grassType}</div>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* Right: reference images */}
+                  <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 24 }}>
+                    <div>
+                      <div style={{ fontSize: 11, fontWeight: 500, color: "var(--color-text-secondary)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8, fontFamily: "var(--font-sans)" }}>Zone reference — 2023 USDA Plant Hardiness Zone Map</div>
+                      <img
+                        src="https://planthardiness.ars.usda.gov/images/phzm_us.jpg"
+                        alt="2023 USDA Plant Hardiness Zone Map"
+                        referrerPolicy="no-referrer"
+                        style={{ width: "100%", borderRadius: "var(--border-radius-md)", border: "0.5px solid var(--color-border-tertiary)", display: "block" }}
+                        onError={e => { e.target.style.display = "none"; e.target.nextSibling.style.display = "block"; }}
+                      />
+                      <a href="https://planthardiness.ars.usda.gov/" target="_blank" rel="noopener noreferrer"
+                        style={{ display: "none", fontSize: 13, color: "var(--color-text-info)", fontFamily: "var(--font-sans)" }}>
+                        View the USDA Zone Map →
+                      </a>
+                    </div>
+
+                    <div>
+                      <div style={{ fontSize: 11, fontWeight: 500, color: "var(--color-text-secondary)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8, fontFamily: "var(--font-sans)" }}>Grass type reference — Cool &amp; Warm Season varieties</div>
+                      <img
+                        src="https://agreenhand.com/wp-content/uploads/2022/05/10-best-types-of-grass-to-plant.jpg"
+                        alt="10 Best Types of Grass to Plant"
+                        referrerPolicy="no-referrer"
+                        style={{ width: "100%", borderRadius: "var(--border-radius-md)", border: "0.5px solid var(--color-border-tertiary)", display: "block" }}
+                        onError={e => { e.target.style.display = "none"; e.target.nextSibling.style.display = "block"; }}
+                      />
+                      <a href="https://agreenhand.com/" target="_blank" rel="noopener noreferrer"
+                        style={{ display: "none", fontSize: 13, color: "var(--color-text-info)", fontFamily: "var(--font-sans)" }}>
+                        View grass type guide →
+                      </a>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            )}
 
           </div>{/* end left column */}
 
