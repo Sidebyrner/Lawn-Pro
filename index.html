@@ -533,6 +533,12 @@
 
       const catStyle = (cat) => CATEGORY_COLORS[cat] || CATEGORY_COLORS.maintenance;
 
+      const getAllNotes = () =>
+        TASK_CATALOG
+          .filter(t => t.recurrYears.includes(yearOffset + 1) && data.notes[getTaskKey(t.id, currentYear, t.month)])
+          .map(t => ({ task: t, text: data.notes[getTaskKey(t.id, currentYear, t.month)] }))
+          .sort((a, b) => a.task.month - b.task.month);
+
       const exportData = () => {
         const json = JSON.stringify(data, null, 2);
         const blob = new Blob([json], { type: 'application/json' });
@@ -605,7 +611,7 @@
             {/* Nav */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 4, marginTop: 14, fontFamily: "var(--font-sans)", flexWrap: "wrap" }}>
               <div style={{ display: "flex", gap: 4 }}>
-                {[["calendar", "📅 Calendar"], ["priorities", "⭐ Priorities"], ["shopping", "🛒 Shopping List"]].map(([k, v]) => (
+                {[["calendar", "📅 Calendar"], ["priorities", "⭐ Priorities"], ["shopping", "🛒 Shopping List"], ["notes", "📝 Notes"]].map(([k, v]) => (
                   <button key={k} onClick={() => setView(k)} style={{
                     padding: "6px 14px", fontSize: 13, borderRadius: "var(--border-radius-md)",
                     background: view === k ? "var(--color-background-info)" : "transparent",
@@ -645,7 +651,8 @@
             <span style={{ fontSize: 12, color: "var(--color-text-secondary)", whiteSpace: "nowrap" }}>{completedYear}/{totalTasksYear} tasks</span>
           </div>
 
-          <div style={{ padding: "16px 20px", maxWidth: 800, margin: "0 auto" }}>
+          <div style={{ display: "flex", alignItems: "flex-start", maxWidth: 1120, margin: "0 auto", padding: "0 20px" }}>
+          <div style={{ flex: 1, minWidth: 0, paddingTop: 16, paddingRight: 20 }}>
 
             {/* CALENDAR VIEW */}
             {view === "calendar" && (
@@ -952,7 +959,100 @@
                 })()}
               </div>
             )}
-          </div>
+
+            {/* NOTES TAB VIEW */}
+            {view === "notes" && (() => {
+              const allNotes = getAllNotes();
+              return (
+                <div>
+                  <div style={{ marginBottom: 20 }}>
+                    <h2 style={{ margin: "0 0 4px", fontSize: 20, fontWeight: 500 }}>My notes</h2>
+                    <p style={{ margin: 0, fontSize: 13, color: "var(--color-text-secondary)", fontFamily: "var(--font-sans)" }}>All notes for Year {yearOffset + 1} · {allNotes.length} {allNotes.length === 1 ? "entry" : "entries"}</p>
+                  </div>
+                  {allNotes.length === 0 ? (
+                    <div style={{ background: "var(--color-background-secondary)", borderRadius: "var(--border-radius-lg)", padding: "32px 24px", textAlign: "center", fontFamily: "var(--font-sans)", color: "var(--color-text-secondary)" }}>
+                      <div style={{ fontSize: 28, marginBottom: 10 }}>📝</div>
+                      <div style={{ fontSize: 14, marginBottom: 6 }}>No notes yet for Year {yearOffset + 1}</div>
+                      <div style={{ fontSize: 12, color: "var(--color-text-tertiary)" }}>Go to the Calendar tab, expand a task, and type in the notes field.</div>
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                      {allNotes.map(({ task, text }, idx) => {
+                        const cat = catStyle(task.category);
+                        const prevMonth = idx > 0 ? allNotes[idx - 1].task.month : null;
+                        return (
+                          <div key={task.id}>
+                            {task.month !== prevMonth && (
+                              <div style={{ fontSize: 12, fontWeight: 500, fontFamily: "var(--font-sans)", color: "var(--color-text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8, marginTop: idx > 0 ? 16 : 0 }}>
+                                {FULL_MONTHS[task.month - 1]}
+                              </div>
+                            )}
+                            <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", padding: "14px 16px", cursor: "pointer" }}
+                              onClick={() => { setActiveMonth(task.month - 1); setView("calendar"); setActiveTask(task.id); }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 6 }}>
+                                <span style={{ fontFamily: "var(--font-sans)", fontSize: 14, fontWeight: 500, color: "var(--color-text-primary)" }}>{task.title}</span>
+                                <span style={{ fontSize: 11, fontFamily: "var(--font-sans)", padding: "2px 8px", borderRadius: 99, background: cat.bg, color: cat.text, border: `0.5px solid ${cat.border}` }}>{cat.label}</span>
+                              </div>
+                              <div style={{ fontSize: 11, color: "var(--color-text-tertiary)", fontFamily: "var(--font-sans)", marginBottom: 8 }}>{task.timing} · {task.cost}</div>
+                              <div style={{ fontSize: 13, color: "var(--color-text-primary)", fontFamily: "var(--font-sans)", lineHeight: 1.6, background: "var(--color-background-secondary)", borderRadius: "var(--border-radius-md)", padding: "10px 12px", whiteSpace: "pre-wrap" }}>{text}</div>
+                              <div style={{ fontSize: 11, color: "var(--color-text-tertiary)", fontFamily: "var(--font-sans)", marginTop: 8 }}>Tap to open task →</div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
+          </div>{/* end left column */}
+
+          {/* NOTES SIDEBAR */}
+          {(() => {
+            const allNotes = getAllNotes();
+            return (
+              <div style={{ width: 272, flexShrink: 0, position: "sticky", top: 16, maxHeight: "calc(100vh - 32px)", overflowY: "auto", paddingTop: 16 }}>
+                <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", overflow: "hidden" }}>
+                  <div style={{ padding: "12px 14px", borderBottom: "0.5px solid var(--color-border-tertiary)", display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 14 }}>📝</span>
+                    <span style={{ fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 500, color: "var(--color-text-primary)", flex: 1 }}>Notes</span>
+                    {allNotes.length > 0 && (
+                      <span style={{ fontFamily: "var(--font-sans)", fontSize: 11, background: "var(--color-background-secondary)", color: "var(--color-text-secondary)", borderRadius: 99, padding: "2px 8px" }}>{allNotes.length}</span>
+                    )}
+                  </div>
+                  {allNotes.length === 0 ? (
+                    <div style={{ padding: "20px 14px", fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--color-text-tertiary)", lineHeight: 1.6, textAlign: "center" }}>
+                      Notes you add to tasks will appear here in real-time.
+                    </div>
+                  ) : (
+                    <div style={{ padding: "10px 0" }}>
+                      {allNotes.map(({ task, text }, idx) => {
+                        const cat = catStyle(task.category);
+                        const prevMonth = idx > 0 ? allNotes[idx - 1].task.month : null;
+                        return (
+                          <div key={task.id}>
+                            {task.month !== prevMonth && (
+                              <div style={{ fontSize: 10, fontWeight: 500, fontFamily: "var(--font-sans)", color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.06em", padding: "6px 14px 2px", marginTop: idx > 0 ? 8 : 0 }}>
+                                {MONTHS[task.month - 1]}
+                              </div>
+                            )}
+                            <div style={{ padding: "8px 14px", cursor: "pointer" }}
+                              onClick={() => { setActiveMonth(task.month - 1); setView("calendar"); setActiveTask(task.id); }}>
+                              <div style={{ fontSize: 11, fontFamily: "var(--font-sans)", padding: "1px 7px", borderRadius: 99, background: cat.bg, color: cat.text, display: "inline-block", marginBottom: 4 }}>{task.title}</div>
+                              <div style={{ fontSize: 12, color: "var(--color-text-primary)", fontFamily: "var(--font-sans)", lineHeight: 1.5, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{text}</div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+
+          </div>{/* end two-column flex */}
         </div>
       );
     }
