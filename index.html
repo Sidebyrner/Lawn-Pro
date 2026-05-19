@@ -545,6 +545,7 @@
       const [libSubview, setLibSubview] = useState("all");
       const [showAllLibProducts, setShowAllLibProducts] = useState(false);
       const [setupStep, setSetupStep] = useState(1);
+      const [activeDay, setActiveDay] = useState(null);
       const [wizardData, setWizardData] = useState(() => ({
         situation: null,
         location: data.location || "",
@@ -596,6 +597,47 @@
           .filter(t => (data.notes || {})[getTaskKey(t.id, currentYear, t.month)])
           .map(t => ({ task: t, text: data.notes[getTaskKey(t.id, currentYear, t.month)] }))
           .sort((a, b) => a.task.month - b.task.month);
+
+      const getDailySchedule = useCallback(() => {
+        const month = activeMonth + 1; // 1-indexed
+        const daysInMonth = new Date(currentYear, activeMonth + 1, 0).getDate();
+        const sit = data.situation;
+        const yr = yearOffset + 1;
+        const isGermSit = ["renovation_kill","renovation_nokill","new_construction","overseed"].includes(sit);
+        const isGermMonth = isGermSit && yr === 1 && (month === 8 || month === 9);
+        const isSummer = month >= 6 && month <= 8;
+        const isGrowing = month >= 4 && month <= 10;
+        const isSlow = month === 3 || month === 11;
+        const isEstablished = sit === "maintenance" || yr > 1;
+        const dayOfWeek1 = new Date(currentYear, activeMonth, 1).getDay(); // 0=Sun
+
+        const days = [];
+        for (let d = 1; d <= daysInMonth; d++) {
+          const acts = [];
+          // WATERING
+          if (isGermMonth) {
+            if (d <= 21) acts.push({ type:"water", label:"Water 3–4× daily (5 min)", color:"#3B82F6", icon:"💧" });
+            else         acts.push({ type:"water", label:"Water 2× daily (10 min)", color:"#60A5FA", icon:"💧" });
+          } else if (isEstablished || (isGermSit && yr > 1)) {
+            const interval = isSummer ? 3 : 5;
+            if (isGrowing && d % interval === 1) acts.push({ type:"water", label: isSummer ? "Deep water 1\"" : "Water deeply", color:"#3B82F6", icon:"💧" });
+          }
+          // MOWING
+          const mowStart = isGermMonth ? 22 : 1;
+          if (d >= mowStart) {
+            if (isGrowing && !isSlow) {
+              const mowInterval = isSummer ? 5 : 7;
+              if ((d - mowStart) % mowInterval === 0 && d !== mowStart) acts.push({ type:"mow", label:`Mow at 3${isSummer ? "" : ".5"}\"`, color:"#16A34A", icon:"✂️" });
+            } else if (isSlow && d % 14 === 0) {
+              acts.push({ type:"mow", label:"Mow if needed", color:"#22C55E", icon:"✂️" });
+            }
+          }
+          // INSPECTION
+          if (isGermMonth && (d === 7 || d === 14 || d === 21)) acts.push({ type:"inspect", label:"Check germination progress", color:"#8B5CF6", icon:"🔍" });
+          days.push({ day: d, acts, dayOfWeek: (dayOfWeek1 + d - 1) % 7 });
+        }
+        return { days, dayOfWeek1, daysInMonth };
+      }, [activeMonth, currentYear, data.situation, yearOffset]);
 
       const completeSetup = () => {
         if (!wizardData.situation) return;
@@ -833,6 +875,88 @@
                     );
                   })}
                 </div>
+                {/* DAILY CALENDAR */}
+                {(() => {
+                  const { days, dayOfWeek1, daysInMonth } = getDailySchedule();
+                  const DOW = ["Su","Mo","Tu","We","Th","Fr","Sa"];
+                  const activeDays = days.filter(d => d.acts.length > 0);
+                  const cellStyle = (d) => {
+                    const isToday = d.day === new Date().getDate() && activeMonth === new Date().getMonth() && currentYear === new Date().getFullYear();
+                    const isSelected = activeDay === d.day;
+                    const hasActs = d.acts.length > 0;
+                    return {
+                      minHeight:52, padding:"4px 3px", borderRadius:"var(--border-radius-md)", cursor: hasActs ? "pointer" : "default",
+                      background: isSelected ? "#EAF3DE" : isToday ? "#F0F7FF" : hasActs ? "var(--color-background-secondary)" : "transparent",
+                      border: isSelected ? "1px solid #1D9E75" : isToday ? "1px solid #93C5FD" : "1px solid transparent",
+                      display:"flex", flexDirection:"column", alignItems:"center", gap:1
+                    };
+                  };
+                  const listRef = React.useRef(null);
+                  React.useEffect(() => {
+                    if (activeDay && listRef.current) {
+                      const el = listRef.current.querySelector(`[data-day="${activeDay}"]`);
+                      if (el) el.scrollIntoView({ behavior:"smooth", block:"nearest" });
+                    }
+                  }, [activeDay]);
+                  return (
+                    <div style={{ background:"var(--color-background-primary)", border:"0.5px solid var(--color-border-tertiary)", borderRadius:"var(--border-radius-lg)", marginBottom:20, overflow:"hidden" }}>
+                      <div style={{ padding:"12px 16px 10px", borderBottom:"0.5px solid var(--color-border-tertiary)", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                        <div style={{ fontFamily:"var(--font-sans)", fontSize:14, fontWeight:500, color:"var(--color-text-primary)" }}>
+                          {FULL_MONTHS[activeMonth]} daily schedule
+                        </div>
+                        <div style={{ display:"flex", gap:12, fontFamily:"var(--font-sans)", fontSize:11, color:"var(--color-text-tertiary)" }}>
+                          <span>💧 Water</span><span>✂️ Mow</span><span>🔍 Inspect</span>
+                        </div>
+                      </div>
+                      <div style={{ display:"flex", gap:0 }}>
+                        {/* Calendar grid */}
+                        <div style={{ flex:"1 1 55%", padding:"10px 12px", borderRight:"0.5px solid var(--color-border-tertiary)" }}>
+                          <div style={{ display:"grid", gridTemplateColumns:"repeat(7,1fr)", gap:2, marginBottom:4 }}>
+                            {DOW.map(d => <div key={d} style={{ textAlign:"center", fontSize:10, fontFamily:"var(--font-sans)", color:"var(--color-text-tertiary)", fontWeight:600, padding:"2px 0" }}>{d}</div>)}
+                          </div>
+                          <div style={{ display:"grid", gridTemplateColumns:"repeat(7,1fr)", gap:2 }}>
+                            {Array.from({ length: dayOfWeek1 }).map((_, i) => <div key={`e${i}`} />)}
+                            {days.map(d => (
+                              <div key={d.day} style={cellStyle(d)} onClick={() => d.acts.length > 0 && setActiveDay(activeDay === d.day ? null : d.day)}>
+                                <div style={{ fontSize:10, fontFamily:"var(--font-sans)", color: activeDay===d.day ? "#0F6E56" : "var(--color-text-secondary)", fontWeight: d.acts.length>0 ? 600 : 400 }}>{d.day}</div>
+                                <div style={{ display:"flex", flexDirection:"column", gap:1, width:"100%", alignItems:"center" }}>
+                                  {d.acts.slice(0,2).map((a,i) => (
+                                    <div key={i} style={{ width:"100%", fontSize:9, fontFamily:"var(--font-sans)", color:"white", background:a.color, borderRadius:2, textAlign:"center", padding:"1px 0", lineHeight:"14px" }}>{a.icon}</div>
+                                  ))}
+                                  {d.acts.length > 2 && <div style={{ fontSize:8, color:"var(--color-text-tertiary)", fontFamily:"var(--font-sans)" }}>+{d.acts.length-2}</div>}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        {/* Day list */}
+                        <div ref={listRef} style={{ flex:"1 1 45%", maxHeight:280, overflowY:"auto", padding:"8px 0" }}>
+                          {activeDays.length === 0 ? (
+                            <div style={{ padding:"24px 16px", textAlign:"center", fontFamily:"var(--font-sans)", fontSize:12, color:"var(--color-text-tertiary)" }}>No watering or mowing scheduled this month.</div>
+                          ) : activeDays.map(d => {
+                            const isSelected = activeDay === d.day;
+                            const dateLabel = `${FULL_MONTHS[activeMonth].slice(0,3)} ${d.day}`;
+                            return (
+                              <div key={d.day} data-day={d.day}
+                                onClick={() => setActiveDay(isSelected ? null : d.day)}
+                                style={{ padding:"7px 14px", cursor:"pointer", background: isSelected ? "#EAF3DE" : "transparent", borderLeft: isSelected ? "3px solid #1D9E75" : "3px solid transparent", display:"flex", alignItems:"flex-start", gap:10 }}>
+                                <div style={{ fontSize:11, fontFamily:"var(--font-sans)", color: isSelected ? "#0F6E56" : "var(--color-text-tertiary)", fontWeight:600, minWidth:36, paddingTop:1 }}>{dateLabel}</div>
+                                <div style={{ display:"flex", flexDirection:"column", gap:3, flex:1 }}>
+                                  {d.acts.map((a,i) => (
+                                    <div key={i} style={{ display:"flex", alignItems:"center", gap:5 }}>
+                                      <span style={{ fontSize:11 }}>{a.icon}</span>
+                                      <span style={{ fontSize:11, fontFamily:"var(--font-sans)", color:"var(--color-text-secondary)" }}>{a.label}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
                 <div>
                   <div style={{ display:"flex", alignItems:"baseline", justifyContent:"space-between", marginBottom:12 }}>
                     <h2 style={{ margin:0, fontSize:22, fontWeight:500 }}>{FULL_MONTHS[activeMonth]}</h2>
