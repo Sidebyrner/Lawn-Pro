@@ -520,6 +520,10 @@
       location: "",
       zone: "6a",
       grassType: "Kentucky Bluegrass",
+      mowHeight: "3.5",
+      mowFreq: "auto",
+      waterFreq: "auto",
+      germWater: "3-4x",
     });
 
     function loadData() {
@@ -546,6 +550,13 @@
       const [showAllLibProducts, setShowAllLibProducts] = useState(false);
       const [setupStep, setSetupStep] = useState(1);
       const [activeDay, setActiveDay] = useState(null);
+      const listRef = useRef(null);
+      useEffect(() => {
+        if (activeDay && listRef.current) {
+          const el = listRef.current.querySelector(`[data-day="${activeDay}"]`);
+          if (el) el.scrollIntoView({ behavior:"smooth", block:"nearest" });
+        }
+      }, [activeDay]);
       const [wizardData, setWizardData] = useState(() => ({
         situation: null,
         location: data.location || "",
@@ -599,7 +610,7 @@
           .sort((a, b) => a.task.month - b.task.month);
 
       const getDailySchedule = useCallback(() => {
-        const month = activeMonth + 1; // 1-indexed
+        const month = activeMonth + 1;
         const daysInMonth = new Date(currentYear, activeMonth + 1, 0).getDate();
         const sit = data.situation;
         const yr = yearOffset + 1;
@@ -609,25 +620,43 @@
         const isGrowing = month >= 4 && month <= 10;
         const isSlow = month === 3 || month === 11;
         const isEstablished = sit === "maintenance" || yr > 1;
-        const dayOfWeek1 = new Date(currentYear, activeMonth, 1).getDay(); // 0=Sun
+        const dayOfWeek1 = new Date(currentYear, activeMonth, 1).getDay();
+
+        // User-configurable intervals
+        const autoWaterInterval = isSummer ? 3 : 5;
+        const waterInterval = data.waterFreq === "auto" ? autoWaterInterval : parseInt(data.waterFreq);
+        const autoMowInterval = isSummer ? 5 : 7;
+        const mowInterval = data.mowFreq === "auto" ? autoMowInterval : parseInt(data.mowFreq);
+        const mowLabel = `Mow at ${data.mowHeight || "3.5"}"`;
+        const germLabel = data.germWater === "1x" ? "Water 1× daily (15 min)"
+                        : data.germWater === "2x" ? "Water 2× daily (10 min)"
+                        : "Water 3–4× daily (5 min)";
+        const germLabelLate = data.germWater === "1x" ? "Water 1× daily (20 min)"
+                            : data.germWater === "2x" ? "Water 2× daily (15 min)"
+                            : "Water 2× daily (10 min)";
+
+        // Fertilizer tasks this month (month-level, pinned to day 1)
+        const fertThisMonth = getTasksThisYear().filter(t => t.month === month && t.category === "fertilizer");
 
         const days = [];
         for (let d = 1; d <= daysInMonth; d++) {
           const acts = [];
+          // FERTILIZER — surface on day 1 as a reminder
+          if (d === 1 && fertThisMonth.length > 0) {
+            fertThisMonth.forEach(ft => acts.push({ type:"fert", label:ft.title, color:"#854F0B", icon:"🌿" }));
+          }
           // WATERING
           if (isGermMonth) {
-            if (d <= 21) acts.push({ type:"water", label:"Water 3–4× daily (5 min)", color:"#3B82F6", icon:"💧" });
-            else         acts.push({ type:"water", label:"Water 2× daily (10 min)", color:"#60A5FA", icon:"💧" });
+            if (d <= 21) acts.push({ type:"water", label:germLabel, color:"#3B82F6", icon:"💧" });
+            else         acts.push({ type:"water", label:germLabelLate, color:"#60A5FA", icon:"💧" });
           } else if (isEstablished || (isGermSit && yr > 1)) {
-            const interval = isSummer ? 3 : 5;
-            if (isGrowing && d % interval === 1) acts.push({ type:"water", label: isSummer ? "Deep water 1\"" : "Water deeply", color:"#3B82F6", icon:"💧" });
+            if (isGrowing && (d - 1) % waterInterval === 0) acts.push({ type:"water", label: isSummer ? `Deep water 1" (every ${waterInterval}d)` : `Water deeply (every ${waterInterval}d)`, color:"#3B82F6", icon:"💧" });
           }
           // MOWING
           const mowStart = isGermMonth ? 22 : 1;
           if (d >= mowStart) {
             if (isGrowing && !isSlow) {
-              const mowInterval = isSummer ? 5 : 7;
-              if ((d - mowStart) % mowInterval === 0 && d !== mowStart) acts.push({ type:"mow", label:`Mow at 3${isSummer ? "" : ".5"}\"`, color:"#16A34A", icon:"✂️" });
+              if ((d - mowStart) % mowInterval === 0 && d !== mowStart) acts.push({ type:"mow", label:mowLabel, color:"#16A34A", icon:"✂️" });
             } else if (isSlow && d % 14 === 0) {
               acts.push({ type:"mow", label:"Mow if needed", color:"#22C55E", icon:"✂️" });
             }
@@ -637,7 +666,7 @@
           days.push({ day: d, acts, dayOfWeek: (dayOfWeek1 + d - 1) % 7 });
         }
         return { days, dayOfWeek1, daysInMonth };
-      }, [activeMonth, currentYear, data.situation, yearOffset]);
+      }, [activeMonth, currentYear, data.situation, data.mowHeight, data.mowFreq, data.waterFreq, data.germWater, yearOffset, getTasksThisYear]);
 
       const completeSetup = () => {
         if (!wizardData.situation) return;
@@ -891,13 +920,6 @@
                       display:"flex", flexDirection:"column", alignItems:"center", gap:1
                     };
                   };
-                  const listRef = React.useRef(null);
-                  React.useEffect(() => {
-                    if (activeDay && listRef.current) {
-                      const el = listRef.current.querySelector(`[data-day="${activeDay}"]`);
-                      if (el) el.scrollIntoView({ behavior:"smooth", block:"nearest" });
-                    }
-                  }, [activeDay]);
                   return (
                     <div style={{ background:"var(--color-background-primary)", border:"0.5px solid var(--color-border-tertiary)", borderRadius:"var(--border-radius-lg)", marginBottom:20, overflow:"hidden" }}>
                       <div style={{ padding:"12px 16px 10px", borderBottom:"0.5px solid var(--color-border-tertiary)", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
@@ -905,7 +927,7 @@
                           {FULL_MONTHS[activeMonth]} daily schedule
                         </div>
                         <div style={{ display:"flex", gap:12, fontFamily:"var(--font-sans)", fontSize:11, color:"var(--color-text-tertiary)" }}>
-                          <span>💧 Water</span><span>✂️ Mow</span><span>🔍 Inspect</span>
+                          <span>💧 Water</span><span>✂️ Mow</span><span>🌿 Fertilize</span><span>🔍 Inspect</span>
                         </div>
                       </div>
                       <div style={{ display:"flex", gap:0 }}>
@@ -1421,6 +1443,56 @@
                   )}
 
                   {/* Data */}
+                  {/* Schedule Preferences */}
+                  {(() => {
+                    const subLabel = { fontSize:11, color:"var(--color-text-tertiary)", fontFamily:"var(--font-sans)", marginBottom:5, display:"block" };
+                    const prefBtn = (active) => ({ padding:"6px 10px", borderRadius:"var(--border-radius-md)", fontSize:12, fontFamily:"var(--font-sans)", border:`0.5px solid ${active ? "#1D9E75" : "var(--color-border-secondary)"}`, background: active ? "#E1F5EE" : "var(--color-background-secondary)", color: active ? "#0F6E56" : "var(--color-text-secondary)", cursor:"pointer", fontWeight: active ? 600 : 400 });
+                    const isGermSit = ["renovation_kill","renovation_nokill","new_construction","overseed"].includes(data.situation);
+                    return (
+                      <>
+                        <span style={label()}>Mowing</span>
+                        <div style={sectionBox}>
+                          <div style={{ marginBottom:12 }}>
+                            <span style={subLabel}>Cutting height</span>
+                            <div style={{ display:"flex", gap:6 }}>
+                              {["2.5","3","3.5","4"].map(h => (
+                                <button key={h} onClick={() => setData(d => ({...d, mowHeight:h}))} style={prefBtn(data.mowHeight===h)}>{h}"</button>
+                              ))}
+                            </div>
+                          </div>
+                          <div>
+                            <span style={subLabel}>Mow every</span>
+                            <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+                              {[["auto","Auto"],["5","5 days"],["7","7 days"],["10","10 days"],["14","14 days"]].map(([v,l]) => (
+                                <button key={v} onClick={() => setData(d => ({...d, mowFreq:v}))} style={prefBtn(data.mowFreq===v)}>{l}</button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                        <span style={label()}>Watering</span>
+                        <div style={sectionBox}>
+                          <div style={{ marginBottom: isGermSit ? 12 : 0 }}>
+                            <span style={subLabel}>Water every (established lawn)</span>
+                            <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+                              {[["auto","Auto"],["2","2 days"],["3","3 days"],["5","5 days"],["7","Weekly"]].map(([v,l]) => (
+                                <button key={v} onClick={() => setData(d => ({...d, waterFreq:v}))} style={prefBtn(data.waterFreq===v)}>{l}</button>
+                              ))}
+                            </div>
+                          </div>
+                          {isGermSit && (
+                            <div>
+                              <span style={subLabel}>Germination watering frequency (Year 1 Aug–Sep)</span>
+                              <div style={{ display:"flex", gap:6 }}>
+                                {[["1x","1× daily"],["2x","2× daily"],["3-4x","3–4× daily"]].map(([v,l]) => (
+                                  <button key={v} onClick={() => setData(d => ({...d, germWater:v}))} style={prefBtn(data.germWater===v)}>{l}</button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    );
+                  })()}
                   <span style={label()}>Data</span>
                   <div style={sectionBox}>
                     <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
