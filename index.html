@@ -51,7 +51,7 @@
       medium: { badge: "$$",  color: "#BA7517", bg: "#FAEEDA", title: "Medium budget" },
       high:   { badge: "$$$", color: "#A32D2D", bg: "#FCEBEB", title: "High budget only" },
     };
-    const itemBudgetTier = (b) => b.includes("low") ? "low" : b.includes("medium") ? "medium" : "high";
+    const itemBudgetTier = (b) => (b.budget || "").includes("low") ? "low" : (b.budget || "").includes("medium") ? "medium" : "high";
 
     const SITUATIONS = {
       renovation_kill:   { label: "Full Renovation — Kill & Reseed",    icon: "⚔️", years: 5, description: "50%+ weeds. Full glyphosate kill, then seed from near-zero.", badge: { text: "Glyphosate required", color: "#A32D2D", bg: "#FCEBEB" } },
@@ -1017,7 +1017,7 @@
                     visibleCats.map(cat => {
                       const catItems = byCat[cat] || [];
                       if (!catItems.length) return null;
-                      const label = SHOP_CAT_LABELS[cat] || cat;
+                      const label = SHOP_CAT_LABELS[cat]?.label || cat;
                       return (
                         <div key={cat}>
                           <div style={{ fontSize:13, fontWeight:600, fontFamily:"var(--font-sans)", color:"var(--color-text-secondary)", marginBottom:8, textTransform:"uppercase", letterSpacing:"0.05em" }}>{label}</div>
@@ -1149,7 +1149,7 @@
                     visibleCats.map(cat => {
                       const catProds = byCat[cat] || [];
                       if (!catProds.length) return null;
-                      const label = SHOP_CAT_LABELS[cat] || cat;
+                      const label = SHOP_CAT_LABELS[cat]?.label || cat;
                       return (
                         <div key={cat}>
                           <div style={{ fontSize:13, fontWeight:600, fontFamily:"var(--font-sans)", color:"var(--color-text-secondary)", marginBottom:8, textTransform:"uppercase", letterSpacing:"0.05em" }}>{label}</div>
@@ -1226,7 +1226,7 @@
                         <div style={{ fontSize:12, color:"var(--color-text-secondary)", fontFamily:"var(--font-sans)", marginBottom:4 }}>USDA Hardiness Zone</div>
                         <select value={data.zone} onChange={e => setData(d => ({ ...d, zone:e.target.value }))}
                           style={{ width:"100%", padding:"8px 10px", fontSize:13, fontFamily:"var(--font-sans)", border:"0.5px solid var(--color-border-secondary)", borderRadius:"var(--border-radius-md)", background:"var(--color-background-secondary)", color:"var(--color-text-primary)" }}>
-                          {ZONES.map(z => <option key={z.value} value={z.value}>{z.label}</option>)}
+                          {ZONES.map(z => <option key={z} value={z}>Zone {z}</option>)}
                         </select>
                       </div>
                       <img src="https://planthardiness.ars.usda.gov/images/map.jpg" alt="USDA Zone Map"
@@ -1258,7 +1258,7 @@
                       {Object.entries(BUDGET_TIERS).map(([k, v]) => (
                         <button key={k} onClick={() => setData(d => ({ ...d, budget:k }))}
                           style={{ flex:1, padding:"10px 6px", borderRadius:"var(--border-radius-md)", border:`0.5px solid ${data.budget===k ? "#1D9E75" : "var(--color-border-secondary)"}`, background: data.budget===k ? "#E1F5EE" : "var(--color-background-secondary)", color: data.budget===k ? "#0F6E56" : "var(--color-text-secondary)", fontSize:13, fontFamily:"var(--font-sans)", cursor:"pointer", fontWeight: data.budget===k ? 600 : 400 }}>
-                          {BUDGET_TIER_ICON[k]} {v.label}
+                          {BUDGET_TIER_ICON[k]?.badge} {v}
                         </button>
                       ))}
                     </div>
