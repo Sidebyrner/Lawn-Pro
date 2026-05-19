@@ -508,6 +508,52 @@
       maintenance:       ["Spring start","Build density","Sustain","Improve","Peak lawn"],
     };
 
+    const MONTHLY_SUGGESTIONS = {
+      1:  { water:"Dormant — no watering needed", mow:"Dormant — no mowing needed", fert:"No fertilizer in winter", spray:"No spray needed" },
+      2:  { water:"Dormant — no watering needed", mow:"Dormant — no mowing needed", fert:"No fertilizer in winter", spray:"No spray needed" },
+      3:  { water:"Skip if rain ≥ 1\"/wk; water once if dry stretch", mow:"Begin when grass hits 3–4\" — raise blade to 3.5\"", fert:"No N yet — roots still waking up", spray:"Watch for GDD250; apply pre-emergent at forsythia petal-drop" },
+      4:  { water:"Once/week deep watering; skip if 1\"+ rain", mow:"Every 7 days — rapid spring growth", fert:"Optional light N (0.5 lb/1000 sq ft) if overdue from fall", spray:"Pre-emergent window: forsythia petal drop = GDD250" },
+      5:  { water:"Every 5–7 days; deep 1\" soak each time", mow:"Every 7 days; keep at 3–3.5\"", fert:"Skip if you fertilized in April; soil still cool", spray:"Broadleaf spot-spray (SpeedZone) on dandelions, clover" },
+      6:  { water:"Every 3–4 days — heat stress begins", mow:"Every 5–6 days at 3.5–4\" — raise height in heat", fert:"No fertilizer June–Aug (summer dormancy risk)", spray:"Post-emergent crabgrass (Tenacity/Drive) if breaking through" },
+      7:  { water:"Every 2–3 days; deep 1\" soak in the AM", mow:"Every 5–6 days at 4\" — never cut more than 1/3", fert:"No fertilizer in summer heat", spray:"Spot-spray only; avoid broad apps in heat stress" },
+      8:  { water:"Germination: 3–4× daily 5 min each; established: every 3 days", mow:"Every 5–7 days; new seedlings: first mow at 3.5\"", fert:"Starter fertilizer at seeding (1.0 lb N/1000 sq ft)", spray:"Tenacity at seeding rate for annual weed suppression" },
+      9:  { water:"Every 3–5 days; taper as temps drop", mow:"Every 7 days; begin lowering height back to 3\"", fert:"Labor Day fert — 1.0 lb N/1000 sq ft (most critical app of the year)", spray:"Fall broadleaf window — SpeedZone root-kill most effective now" },
+      10: { water:"Every 7 days if dry; ground still warm", mow:"Every 7–10 days; set to 2.5\" for final mows", fert:"October fert — 1.0 lb N/1000 sq ft for root reserves", spray:"Last broadleaf app if dandelions still active" },
+      11: { water:"Skip unless extreme drought; lawn dormant soon", mow:"Final mow at 2–2.5\" before dormancy", fert:"Dormant feed (urea) after first frost but before ground freezes", spray:"No spray — turf dormant" },
+      12: { water:"Dormant — no watering needed", mow:"Dormant — no mowing needed", fert:"No fertilizer in winter", spray:"No spray needed" },
+    };
+
+    const FAQ_SECTIONS = [
+      { id:"watering", icon:"💧", title:"Watering", faqs:[
+        { q:"How often should I water my lawn?", a:"For established cool-season grass (Kentucky Bluegrass, fescue), water deeply once every 3–5 days in summer and every 5–7 days in spring/fall. The goal is 1 inch of water per week total including rain. Deep, infrequent watering trains roots to grow 4–6 inches deep, making your lawn far more drought-tolerant than shallow daily watering." },
+        { q:"What time of day is best to water?", a:"Early morning (5–9 AM) is ideal. The water soaks in before heat evaporation, and the grass blades dry quickly in the morning sun — reducing fungal disease risk. Avoid evening watering; wet turf overnight is the #1 cause of lawn fungal problems like dollar spot and brown patch." },
+        { q:"How do I know if my lawn needs water?", a:"Look for the 'footprint test': step on your grass. If it springs back in 30 seconds, it has enough moisture. If your footprints stay visible, the lawn is drought-stressed and needs water. Also watch for a blue-gray tint on the grass blades — that's turf folding its leaves to conserve moisture, a clear sign it's time to water." },
+        { q:"Should I water differently after seeding?", a:"Yes — dramatically different. New seed needs constant moisture to germinate. For the first 2–3 weeks, water lightly 3–4 times per day (5–10 minutes each) to keep the top ½ inch of soil consistently moist. Once seedlings reach 1 inch tall, transition to once daily. After the first mow, shift to your normal deep/infrequent schedule." },
+        { q:"Does rain count toward my watering schedule?", a:"Absolutely — always check rainfall before watering. 1 inch of rain = 1 week of watering. You can place a tuna can in your lawn; when it fills to 1 inch, you've received a full irrigation equivalent. Most digital rain gauges cost $15–$20. Overwatering is just as harmful as underwatering — it promotes shallow roots, fungal disease, and thatch buildup." },
+      ]},
+      { id:"mowing", icon:"✂️", title:"Mowing", faqs:[
+        { q:"How short should I cut my grass?", a:"For cool-season grasses (Kentucky Bluegrass, fescue), maintain 3–4 inches during the growing season. Never cut more than 1/3 of the blade height at once — this is the 'one-third rule.' Cutting too short (scalping) exposes the soil to sunlight, allowing weeds to germinate and stressing the plant. In summer heat, raise to 4 inches to shade the soil and reduce water loss." },
+        { q:"How often should I mow?", a:"Mow based on growth rate, not the calendar. In peak spring and fall growth (April–May, September–October), this may mean every 5–7 days. In summer heat stress, growth slows and you may only need to mow every 10–14 days. A good rule: mow when the grass is about 1/3 taller than your target height. If your target is 3.5\", mow when it reaches about 5\"." },
+        { q:"Should I bag or mulch my grass clippings?", a:"Mulch whenever possible. Grass clippings decompose quickly and return nitrogen to the soil — equivalent to about one fertilizer application per season. The myth that clippings cause thatch is false; clippings are 80% water and break down within a week. Only bag clippings if you've let the lawn get too long (over 5\") and the clippings are so thick they're smothering the grass below." },
+        { q:"When should I sharpen my mower blade?", a:"Sharpen at least once per season, ideally at the start of spring. A dull blade tears grass rather than cutting it cleanly, leaving ragged white tips that turn brown and invite disease. You can sharpen yourself with a file or angle grinder for $5–$10, or take it to a hardware store for $10–$15. After hitting a rock or hard object, sharpen immediately." },
+        { q:"Is it bad to mow wet grass?", a:"Yes — wet grass clumps, clogs the mower deck, and leaves uneven cut patterns. Wet soil compacts under mower wheels, damaging root structure. More importantly, mowing wet grass spreads fungal disease throughout the lawn when infected clippings contact healthy areas. Wait until the grass surface is dry, even if the soil is still moist from rain." },
+      ]},
+      { id:"fertilization", icon:"🌿", title:"Fertilization", faqs:[
+        { q:"When is the best time to fertilize cool-season grass?", a:"The most important fertilizer applications for cool-season grasses are in fall: Labor Day (early September) and mid-October. Fall fertilization builds root energy reserves that fuel spring green-up. A third optional application can go in late spring (May). Avoid fertilizing in summer (June–August) — pushing top growth during heat stress weakens roots and increases disease risk." },
+        { q:"What do the three numbers on fertilizer bags mean?", a:"The three numbers (e.g. 32-0-4) are the NPK ratio: Nitrogen (N), Phosphorus (P), Potassium (K). Nitrogen drives green color and leaf growth. Phosphorus supports root development — critical for new seeding (use a 20-27-5 starter). Potassium strengthens the plant's disease and drought resistance. For established lawns, a high-N formula like 32-0-4 or 24-0-11 is typical for fall maintenance feeding." },
+        { q:"How much fertilizer do I actually apply?", a:"Most fall fertilizer programs target 1.0 lb of actual Nitrogen per 1,000 sq ft per application. To calculate: if your fertilizer is 32-0-4 (32% N), you need 3.1 lbs of product per 1,000 sq ft (1 ÷ 0.32 = 3.1). Measure your lawn area in sq ft, divide by 1,000, multiply by 3.1 lbs. Always calibrate your spreader first on a driveway to avoid over-applying in stripes." },
+        { q:"Can I fertilize right before it rains?", a:"Light rain (under ½\") within 24–48 hours after granular fertilizer is actually ideal — it activates and moves the nutrients into the soil without washing them away. Avoid fertilizing before heavy rain (over 1\"), which can wash urea nitrogen into storm drains (fertilizer runoff). If using liquid fertilizer, wait 24 hours before rain to let it dry on the leaf surface." },
+        { q:"What is a 'dormant feed' and when do I do it?", a:"A dormant feed is a late-season urea (46-0-0) application applied after the lawn has stopped growing but before the ground freezes — typically late November in zones 5–6. The nitrogen doesn't get taken up until spring green-up, giving you an early boost without stimulating tender new growth before winter. Apply at 0.5 lb N/1000 sq ft. Skip if your ground freezes before Thanksgiving." },
+      ]},
+      { id:"spraying", icon:"🧪", title:"Spraying", faqs:[
+        { q:"What is a pre-emergent herbicide and when do I apply it?", a:"Pre-emergents (like prodiamine or pendimethalin) create a chemical barrier in the top ½ inch of soil that prevents crabgrass seeds from germinating. They must be applied BEFORE the seeds germinate — the timing target is GDD32=250 (growing degree days), which corresponds to forsythia petal-drop in most cool-season zones. Miss this window and the product is largely ineffective. IMPORTANT: Do not apply pre-emergent to any area you plan to overseed — it will block grass seed too." },
+        { q:"How do I kill dandelions without hurting my lawn?", a:"Use a selective broadleaf herbicide like SpeedZone (carfentrazone + 2,4-D) or Triplet SF. These kill broadleaf plants while leaving grass unharmed. Apply on a calm, 65°F+ day when dandelions are actively growing. Results appear in 3–5 days. For best root-kill, apply in fall (September–October) when the plant is drawing energy downward into its taproot — this is 2–3× more effective than spring applications." },
+        { q:"What is Tenacity and when should I use it?", a:"Tenacity (mesotrione) is a herbicide that both suppresses weeds at seeding time AND controls crabgrass post-emergent. At seeding, apply it without surfactant to suppress annual weeds while your grass germinates. For post-emergent crabgrass, apply 3 times, 2 weeks apart, WITH a non-ionic surfactant (NIS). Treated weeds turn white before dying — this is normal bleaching from the active ingredient." },
+        { q:"Is it safe to spray herbicides near my garden?", a:"Use extreme caution. Most broadleaf herbicides (2,4-D, dicamba, triclopyr) are volatile in warm weather and can drift or volatilize onto nearby vegetables, flowers, and ornamentals — causing twisted growth or plant death. Spray on calm days under 70°F with low wind. Keep a 10–15 ft buffer from garden beds. Never spray when temperatures exceed 85°F — herbicide volatility increases sharply and drift risk is high." },
+        { q:"How long after spraying herbicide can I reseed?", a:"It depends on the product. After glyphosate (Roundup), wait 7 days before seeding. After prodiamine pre-emergent, wait 10–16 weeks (it actively prevents germination for months). After Tenacity applied at seeding, you can seed immediately. After SpeedZone/Triplet broadleaf sprays, wait 3–4 weeks. Always read the product label — the waiting period is listed under 'Seeding Restrictions.'" },
+      ]},
+    ];
+
     const defaultData = () => ({
       year: new Date().getFullYear(),
       budget: "medium",
@@ -524,6 +570,8 @@
       mowFreq: "auto",
       waterFreq: "auto",
       germWater: "3-4x",
+      shedItems: [],
+      customDays: {},
     });
 
     function loadData() {
@@ -548,6 +596,10 @@
       const [shopSubview, setShopSubview] = useState("all");
       const [libSubview, setLibSubview] = useState("all");
       const [showAllLibProducts, setShowAllLibProducts] = useState(false);
+      const [shedPane, setShedPane] = useState("all");
+      const [lawnProOpenQ, setLawnProOpenQ] = useState(null);
+      const [todayDate, setTodayDate] = useState(() => new Date());
+      const [editingDay, setEditingDay] = useState(null);
       const [setupStep, setSetupStep] = useState(1);
       const [activeDay, setActiveDay] = useState(null);
       const listRef = useRef(null);
@@ -667,6 +719,45 @@
         }
         return { days, dayOfWeek1, daysInMonth };
       }, [activeMonth, currentYear, data.situation, data.mowHeight, data.mowFreq, data.waterFreq, data.germWater, yearOffset, getTasksThisYear]);
+
+      const getDayActs = useCallback((date) => {
+        const month = date.getMonth() + 1;
+        const d = date.getDate();
+        const yr = yearOffset + 1;
+        const sit = data.situation;
+        const isGermSit = ["renovation_kill","renovation_nokill","new_construction","overseed"].includes(sit);
+        const isGermMonth = isGermSit && yr === 1 && (month === 8 || month === 9);
+        const isSummer = month >= 6 && month <= 8;
+        const isGrowing = month >= 4 && month <= 10;
+        const isSlow = month === 3 || month === 11;
+        const isEstablished = sit === "maintenance" || yr > 1;
+        const autoWaterInterval = isSummer ? 3 : 5;
+        const waterInterval = data.waterFreq === "auto" ? autoWaterInterval : parseInt(data.waterFreq);
+        const autoMowInterval = isSummer ? 5 : 7;
+        const mowInterval = data.mowFreq === "auto" ? autoMowInterval : parseInt(data.mowFreq);
+        const mowLabel = `Mow at ${data.mowHeight || "3.5"}"`;
+        const germLabel = data.germWater === "1x" ? "Water 1× daily (15 min)" : data.germWater === "2x" ? "Water 2× daily (10 min)" : "Water 3–4× daily (5 min)";
+        const germLabelLate = data.germWater === "1x" ? "Water 1× daily (20 min)" : data.germWater === "2x" ? "Water 2× daily (15 min)" : "Water 2× daily (10 min)";
+        const acts = [];
+        const fertThisMonth = getTasksThisYear().filter(t => t.month === month && t.category === "fertilizer");
+        if (d === 1 && fertThisMonth.length > 0) fertThisMonth.forEach(ft => acts.push({ type:"fert", label:ft.title, color:"#854F0B", icon:"🌿" }));
+        if (isGermMonth) {
+          if (d <= 21) acts.push({ type:"water", label:germLabel, color:"#3B82F6", icon:"💧" });
+          else acts.push({ type:"water", label:germLabelLate, color:"#60A5FA", icon:"💧" });
+        } else if (isEstablished || (isGermSit && yr > 1)) {
+          if (isGrowing && (d - 1) % waterInterval === 0) acts.push({ type:"water", label: isSummer ? `Deep water 1" (every ${waterInterval}d)` : `Water deeply (every ${waterInterval}d)`, color:"#3B82F6", icon:"💧" });
+        }
+        const mowStart = isGermMonth ? 22 : 1;
+        if (d >= mowStart) {
+          if (isGrowing && !isSlow) { if ((d - mowStart) % mowInterval === 0 && d !== mowStart) acts.push({ type:"mow", label:mowLabel, color:"#16A34A", icon:"✂️" }); }
+          else if (isSlow && d % 14 === 0) acts.push({ type:"mow", label:"Mow if needed", color:"#22C55E", icon:"✂️" });
+        }
+        if (isGermMonth && (d === 7 || d === 14 || d === 21)) acts.push({ type:"inspect", label:"Check germination progress", color:"#8B5CF6", icon:"🔍" });
+        const key = `${date.getFullYear()}-${month}-${d}`;
+        const custom = (data.customDays || {})[key];
+        if (custom) return acts.filter(a => custom.includes(a.type));
+        return acts;
+      }, [data.situation, data.mowHeight, data.mowFreq, data.waterFreq, data.germWater, yearOffset, getTasksThisYear, data.customDays]);
 
       const completeSetup = () => {
         if (!wizardData.situation) return;
@@ -857,7 +948,7 @@
             {/* Nav */}
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:4, marginTop:14, fontFamily:"var(--font-sans)", flexWrap:"wrap" }}>
               <div style={{ display:"flex", gap:4, flexWrap:"wrap" }}>
-                {[["calendar","📅 Calendar"],["priorities","⭐ Priorities"],["shopping","🛒 Shopping"],["notes","📝 Notes"],["library","📦 Products"],["settings","⚙️ Settings"]].map(([k,v]) => (
+                {[["calendar","📅 Calendar"],["priorities","⭐ Priorities"],["shopping","🛒 Shopping"],["notes","📝 Notes"],["shed","🏚️ Shed"],["today","📌 Today"],["lawn-pro","🌿 Lawn Pro"],["settings","⚙️ Settings"]].map(([k,v]) => (
                   <button key={k} onClick={() => setView(k)} style={{ padding:"6px 12px", fontSize:13, borderRadius:"var(--border-radius-md)", background: view===k ? "var(--color-background-info)" : "transparent", color: view===k ? "var(--color-text-info)" : "var(--color-text-secondary)", border: view===k ? "0.5px solid var(--color-border-info)" : "0.5px solid transparent", fontWeight: view===k ? 500 : 400 }}>{v}</button>
                 ))}
               </div>
@@ -904,76 +995,185 @@
                     );
                   })}
                 </div>
-                {/* DAILY CALENDAR */}
+                {/* DAILY CALENDAR + SUGGESTIONS SPLIT */}
                 {(() => {
-                  const { days, dayOfWeek1, daysInMonth } = getDailySchedule();
+                  const { days, dayOfWeek1 } = getDailySchedule();
                   const DOW = ["Su","Mo","Tu","We","Th","Fr","Sa"];
-                  const activeDays = days.filter(d => d.acts.length > 0);
+                  const sug = MONTHLY_SUGGESTIONS[activeMonth + 1] || MONTHLY_SUGGESTIONS[1];
+                  const ALL_ACTS = ["water","mow","fert","inspect"];
+                  const ACT_META = { water:{icon:"💧",label:"Water",color:"#3B82F6"}, mow:{icon:"✂️",label:"Mow",color:"#16A34A"}, fert:{icon:"🌿",label:"Fertilize",color:"#854F0B"}, inspect:{icon:"🔍",label:"Inspect",color:"#8B5CF6"} };
+
+                  const getEffectiveActs = (day, autoActs) => {
+                    const key = `${currentYear}-${activeMonth+1}-${day}`;
+                    const custom = (data.customDays || {})[key];
+                    if (!custom) return autoActs;
+                    return autoActs.filter(a => custom.includes(a.type));
+                  };
+
+                  const toggleActForDay = (day, actType) => {
+                    const key = `${currentYear}-${activeMonth+1}-${day}`;
+                    const autoActs = days.find(d => d.day === day)?.acts || [];
+                    const current = (data.customDays || {})[key] ?? autoActs.map(a => a.type);
+                    const next = current.includes(actType) ? current.filter(t => t !== actType) : [...current, actType];
+                    setData(d => ({ ...d, customDays: { ...(d.customDays||{}), [key]: next } }));
+                  };
+
+                  const resetDay = (day) => {
+                    const key = `${currentYear}-${activeMonth+1}-${day}`;
+                    setData(d => {
+                      const cd = { ...(d.customDays||{}) };
+                      delete cd[key];
+                      return { ...d, customDays: cd };
+                    });
+                  };
+
+                  const activeDays = days.filter(d => getEffectiveActs(d.day, d.acts).length > 0);
+
                   const cellStyle = (d) => {
                     const isToday = d.day === new Date().getDate() && activeMonth === new Date().getMonth() && currentYear === new Date().getFullYear();
                     const isSelected = activeDay === d.day;
+                    const isEditing = editingDay === d.day;
+                    const effActs = getEffectiveActs(d.day, d.acts);
                     const hasActs = d.acts.length > 0;
+                    const isCustom = !!(data.customDays || {})[`${currentYear}-${activeMonth+1}-${d.day}`];
                     return {
-                      minHeight:52, padding:"4px 3px", borderRadius:"var(--border-radius-md)", cursor: hasActs ? "pointer" : "default",
-                      background: isSelected ? "#EAF3DE" : isToday ? "#F0F7FF" : hasActs ? "var(--color-background-secondary)" : "transparent",
-                      border: isSelected ? "1px solid #1D9E75" : isToday ? "1px solid #93C5FD" : "1px solid transparent",
+                      minHeight:52, padding:"4px 3px", borderRadius:"var(--border-radius-md)", cursor:"pointer", position:"relative",
+                      background: isEditing ? "#FFF7E6" : isSelected ? "#EAF3DE" : isToday ? "#F0F7FF" : hasActs ? "var(--color-background-secondary)" : "transparent",
+                      border: isEditing ? "1px solid #F59E0B" : isSelected ? "1px solid #1D9E75" : isToday ? "1px solid #93C5FD" : "1px solid transparent",
                       display:"flex", flexDirection:"column", alignItems:"center", gap:1
                     };
                   };
+
                   return (
-                    <div style={{ background:"var(--color-background-primary)", border:"0.5px solid var(--color-border-tertiary)", borderRadius:"var(--border-radius-lg)", marginBottom:20, overflow:"hidden" }}>
-                      <div style={{ padding:"12px 16px 10px", borderBottom:"0.5px solid var(--color-border-tertiary)", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-                        <div style={{ fontFamily:"var(--font-sans)", fontSize:14, fontWeight:500, color:"var(--color-text-primary)" }}>
-                          {FULL_MONTHS[activeMonth]} daily schedule
-                        </div>
-                        <div style={{ display:"flex", gap:12, fontFamily:"var(--font-sans)", fontSize:11, color:"var(--color-text-tertiary)" }}>
-                          <span>💧 Water</span><span>✂️ Mow</span><span>🌿 Fertilize</span><span>🔍 Inspect</span>
+                    <div style={{ display:"flex", gap:14, alignItems:"flex-start", marginBottom:20 }}>
+                      {/* LEFT: calendar + list */}
+                      <div style={{ flex:"0 0 calc(65% - 7px)", minWidth:0 }}>
+                        <div style={{ background:"var(--color-background-primary)", border:"0.5px solid var(--color-border-tertiary)", borderRadius:"var(--border-radius-lg)", overflow:"hidden" }}>
+                          <div style={{ padding:"12px 16px 10px", borderBottom:"0.5px solid var(--color-border-tertiary)", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                            <div style={{ fontFamily:"var(--font-sans)", fontSize:14, fontWeight:500, color:"var(--color-text-primary)" }}>
+                              {FULL_MONTHS[activeMonth]} daily schedule
+                            </div>
+                            <div style={{ display:"flex", gap:10, fontFamily:"var(--font-sans)", fontSize:11, color:"var(--color-text-tertiary)" }}>
+                              <span>💧 Water</span><span>✂️ Mow</span><span>🌿 Fert</span><span>🔍 Inspect</span>
+                              <span style={{ color:"#F59E0B" }}>✏️ = edited</span>
+                            </div>
+                          </div>
+                          <div style={{ display:"flex", gap:0 }}>
+                            {/* Calendar grid */}
+                            <div style={{ flex:"1 1 55%", padding:"10px 12px", borderRight:"0.5px solid var(--color-border-tertiary)" }}>
+                              <div style={{ display:"grid", gridTemplateColumns:"repeat(7,1fr)", gap:2, marginBottom:4 }}>
+                                {DOW.map(dow => <div key={dow} style={{ textAlign:"center", fontSize:10, fontFamily:"var(--font-sans)", color:"var(--color-text-tertiary)", fontWeight:600, padding:"2px 0" }}>{dow}</div>)}
+                              </div>
+                              <div style={{ display:"grid", gridTemplateColumns:"repeat(7,1fr)", gap:2 }}>
+                                {Array.from({ length: dayOfWeek1 }).map((_, i) => <div key={`e${i}`} />)}
+                                {days.map(d => {
+                                  const effActs = getEffectiveActs(d.day, d.acts);
+                                  const isCustom = !!(data.customDays || {})[`${currentYear}-${activeMonth+1}-${d.day}`];
+                                  const isEditing = editingDay === d.day;
+                                  return (
+                                    <div key={d.day} style={cellStyle(d)}
+                                      onClick={() => { setActiveDay(activeDay === d.day ? null : d.day); setEditingDay(isEditing ? null : d.day); }}>
+                                      <div style={{ fontSize:10, fontFamily:"var(--font-sans)", color: isEditing ? "#B45309" : activeDay===d.day ? "#0F6E56" : "var(--color-text-secondary)", fontWeight: d.acts.length>0 ? 600 : 400 }}>{d.day}</div>
+                                      {isCustom && <div style={{ position:"absolute", top:2, right:3, fontSize:7, color:"#F59E0B" }}>✏</div>}
+                                      <div style={{ display:"flex", flexDirection:"column", gap:1, width:"100%", alignItems:"center" }}>
+                                        {effActs.slice(0,2).map((a,i) => (
+                                          <div key={i} style={{ width:"100%", fontSize:9, fontFamily:"var(--font-sans)", color:"white", background:a.color, borderRadius:2, textAlign:"center", padding:"1px 0", lineHeight:"14px" }}>{a.icon}</div>
+                                        ))}
+                                        {effActs.length > 2 && <div style={{ fontSize:8, color:"var(--color-text-tertiary)", fontFamily:"var(--font-sans)" }}>+{effActs.length-2}</div>}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                              {/* Day editor panel */}
+                              {editingDay !== null && (() => {
+                                const autoActs = days.find(d => d.day === editingDay)?.acts || [];
+                                const key = `${currentYear}-${activeMonth+1}-${editingDay}`;
+                                const current = (data.customDays || {})[key] ?? autoActs.map(a => a.type);
+                                const isCustom = !!(data.customDays || {})[key];
+                                return (
+                                  <div style={{ marginTop:10, padding:"10px 12px", background:"#FFFBEB", border:"1px solid #FDE68A", borderRadius:"var(--border-radius-md)", fontFamily:"var(--font-sans)" }}>
+                                    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8 }}>
+                                      <span style={{ fontSize:12, fontWeight:600, color:"#92400E" }}>Edit {FULL_MONTHS[activeMonth]} {editingDay}</span>
+                                      <div style={{ display:"flex", gap:6 }}>
+                                        {isCustom && <button onClick={() => { resetDay(editingDay); setEditingDay(null); }} style={{ fontSize:11, background:"none", border:"0.5px solid #D97706", borderRadius:"var(--border-radius-md)", padding:"3px 8px", color:"#D97706", cursor:"pointer" }}>Reset to auto</button>}
+                                        <button onClick={() => setEditingDay(null)} style={{ fontSize:11, background:"none", border:"none", color:"#92400E", cursor:"pointer", padding:"3px 6px" }}>✕</button>
+                                      </div>
+                                    </div>
+                                    <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+                                      {ALL_ACTS.map(actType => {
+                                        const meta = ACT_META[actType];
+                                        const active = current.includes(actType);
+                                        return (
+                                          <button key={actType} onClick={() => toggleActForDay(editingDay, actType)}
+                                            style={{ display:"flex", alignItems:"center", gap:4, padding:"5px 10px", borderRadius:99, fontSize:12, cursor:"pointer", border:`1px solid ${active ? meta.color : "var(--color-border-secondary)"}`, background: active ? meta.color : "white", color: active ? "white" : "var(--color-text-secondary)", fontFamily:"var(--font-sans)", fontWeight: active ? 600 : 400 }}>
+                                            {meta.icon} {meta.label}
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                );
+                              })()}
+                            </div>
+                            {/* Day list */}
+                            <div ref={listRef} style={{ flex:"1 1 45%", maxHeight:300, overflowY:"auto", padding:"8px 0" }}>
+                              {activeDays.length === 0 ? (
+                                <div style={{ padding:"24px 16px", textAlign:"center", fontFamily:"var(--font-sans)", fontSize:12, color:"var(--color-text-tertiary)" }}>No watering or mowing scheduled this month.</div>
+                              ) : activeDays.map(d => {
+                                const effActs = getEffectiveActs(d.day, d.acts);
+                                const isSelected = activeDay === d.day;
+                                const dateLabel = `${FULL_MONTHS[activeMonth].slice(0,3)} ${d.day}`;
+                                return (
+                                  <div key={d.day} data-day={d.day}
+                                    onClick={() => { setActiveDay(isSelected ? null : d.day); setEditingDay(editingDay === d.day ? null : d.day); }}
+                                    style={{ padding:"7px 14px", cursor:"pointer", background: isSelected ? "#EAF3DE" : "transparent", borderLeft: isSelected ? "3px solid #1D9E75" : "3px solid transparent", display:"flex", alignItems:"flex-start", gap:10 }}>
+                                    <div style={{ fontSize:11, fontFamily:"var(--font-sans)", color: isSelected ? "#0F6E56" : "var(--color-text-tertiary)", fontWeight:600, minWidth:36, paddingTop:1 }}>{dateLabel}</div>
+                                    <div style={{ display:"flex", flexDirection:"column", gap:3, flex:1 }}>
+                                      {effActs.map((a,i) => (
+                                        <div key={i} style={{ display:"flex", alignItems:"center", gap:5 }}>
+                                          <span style={{ fontSize:11 }}>{a.icon}</span>
+                                          <span style={{ fontSize:11, fontFamily:"var(--font-sans)", color:"var(--color-text-secondary)" }}>{a.label}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      <div style={{ display:"flex", gap:0 }}>
-                        {/* Calendar grid */}
-                        <div style={{ flex:"1 1 55%", padding:"10px 12px", borderRight:"0.5px solid var(--color-border-tertiary)" }}>
-                          <div style={{ display:"grid", gridTemplateColumns:"repeat(7,1fr)", gap:2, marginBottom:4 }}>
-                            {DOW.map(d => <div key={d} style={{ textAlign:"center", fontSize:10, fontFamily:"var(--font-sans)", color:"var(--color-text-tertiary)", fontWeight:600, padding:"2px 0" }}>{d}</div>)}
+
+                      {/* RIGHT: monthly suggestions */}
+                      <div style={{ flex:"0 0 calc(35% - 7px)", minWidth:0 }}>
+                        <div style={{ background:"var(--color-background-primary)", border:"0.5px solid var(--color-border-tertiary)", borderRadius:"var(--border-radius-lg)", padding:"14px 16px", position:"sticky", top:16 }}>
+                          <div style={{ fontSize:13, fontWeight:600, fontFamily:"var(--font-sans)", color:"var(--color-text-primary)", marginBottom:12 }}>
+                            {FULL_MONTHS[activeMonth]} Guidance
                           </div>
-                          <div style={{ display:"grid", gridTemplateColumns:"repeat(7,1fr)", gap:2 }}>
-                            {Array.from({ length: dayOfWeek1 }).map((_, i) => <div key={`e${i}`} />)}
-                            {days.map(d => (
-                              <div key={d.day} style={cellStyle(d)} onClick={() => d.acts.length > 0 && setActiveDay(activeDay === d.day ? null : d.day)}>
-                                <div style={{ fontSize:10, fontFamily:"var(--font-sans)", color: activeDay===d.day ? "#0F6E56" : "var(--color-text-secondary)", fontWeight: d.acts.length>0 ? 600 : 400 }}>{d.day}</div>
-                                <div style={{ display:"flex", flexDirection:"column", gap:1, width:"100%", alignItems:"center" }}>
-                                  {d.acts.slice(0,2).map((a,i) => (
-                                    <div key={i} style={{ width:"100%", fontSize:9, fontFamily:"var(--font-sans)", color:"white", background:a.color, borderRadius:2, textAlign:"center", padding:"1px 0", lineHeight:"14px" }}>{a.icon}</div>
-                                  ))}
-                                  {d.acts.length > 2 && <div style={{ fontSize:8, color:"var(--color-text-tertiary)", fontFamily:"var(--font-sans)" }}>+{d.acts.length-2}</div>}
-                                </div>
-                              </div>
-                            ))}
+                          {[
+                            { icon:"💧", label:"Watering", text:sug.water, color:"#1E40AF", bg:"#EFF6FF" },
+                            { icon:"✂️", label:"Mowing", text:sug.mow, color:"#166534", bg:"#F0FDF4" },
+                            { icon:"🌿", label:"Fertilizing", text:sug.fert, color:"#854F0B", bg:"#FFFBEB" },
+                            { icon:"🧪", label:"Spraying", text:sug.spray, color:"#6B21A8", bg:"#FAF5FF" },
+                          ].map(row => (
+                            <div key={row.label} style={{ background:row.bg, borderRadius:"var(--border-radius-md)", padding:"10px 12px", marginBottom:8 }}>
+                              <div style={{ fontSize:11, fontWeight:600, color:row.color, fontFamily:"var(--font-sans)", marginBottom:3 }}>{row.icon} {row.label}</div>
+                              <div style={{ fontSize:12, color:"var(--color-text-secondary)", fontFamily:"var(--font-sans)", lineHeight:1.5 }}>{row.text}</div>
+                            </div>
+                          ))}
+                          <div style={{ marginTop:10, paddingTop:10, borderTop:"0.5px solid var(--color-border-tertiary)" }}>
+                            <div style={{ fontSize:11, color:"var(--color-text-tertiary)", fontFamily:"var(--font-sans)", marginBottom:6 }}>Your settings</div>
+                            <div style={{ display:"flex", gap:5, flexWrap:"wrap" }}>
+                              <span style={{ fontSize:11, fontFamily:"var(--font-sans)", padding:"2px 7px", borderRadius:99, background:"#E1F5EE", color:"#0F6E56" }}>✂️ {data.mowHeight}"</span>
+                              <span style={{ fontSize:11, fontFamily:"var(--font-sans)", padding:"2px 7px", borderRadius:99, background:"#E1F5EE", color:"#0F6E56" }}>Mow {data.mowFreq === "auto" ? "auto" : `${data.mowFreq}d`}</span>
+                              <span style={{ fontSize:11, fontFamily:"var(--font-sans)", padding:"2px 7px", borderRadius:99, background:"#EFF6FF", color:"#1E40AF" }}>💧 Water {data.waterFreq === "auto" ? "auto" : `${data.waterFreq}d`}</span>
+                            </div>
+                            <button onClick={() => setView("settings")} style={{ marginTop:6, fontSize:11, fontFamily:"var(--font-sans)", background:"none", border:"none", color:"var(--color-text-tertiary)", cursor:"pointer", textDecoration:"underline", padding:0 }}>Edit in Settings →</button>
                           </div>
-                        </div>
-                        {/* Day list */}
-                        <div ref={listRef} style={{ flex:"1 1 45%", maxHeight:280, overflowY:"auto", padding:"8px 0" }}>
-                          {activeDays.length === 0 ? (
-                            <div style={{ padding:"24px 16px", textAlign:"center", fontFamily:"var(--font-sans)", fontSize:12, color:"var(--color-text-tertiary)" }}>No watering or mowing scheduled this month.</div>
-                          ) : activeDays.map(d => {
-                            const isSelected = activeDay === d.day;
-                            const dateLabel = `${FULL_MONTHS[activeMonth].slice(0,3)} ${d.day}`;
-                            return (
-                              <div key={d.day} data-day={d.day}
-                                onClick={() => setActiveDay(isSelected ? null : d.day)}
-                                style={{ padding:"7px 14px", cursor:"pointer", background: isSelected ? "#EAF3DE" : "transparent", borderLeft: isSelected ? "3px solid #1D9E75" : "3px solid transparent", display:"flex", alignItems:"flex-start", gap:10 }}>
-                                <div style={{ fontSize:11, fontFamily:"var(--font-sans)", color: isSelected ? "#0F6E56" : "var(--color-text-tertiary)", fontWeight:600, minWidth:36, paddingTop:1 }}>{dateLabel}</div>
-                                <div style={{ display:"flex", flexDirection:"column", gap:3, flex:1 }}>
-                                  {d.acts.map((a,i) => (
-                                    <div key={i} style={{ display:"flex", alignItems:"center", gap:5 }}>
-                                      <span style={{ fontSize:11 }}>{a.icon}</span>
-                                      <span style={{ fontSize:11, fontFamily:"var(--font-sans)", color:"var(--color-text-secondary)" }}>{a.label}</span>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            );
-                          })}
+                          <div style={{ marginTop:10, paddingTop:10, borderTop:"0.5px solid var(--color-border-tertiary)" }}>
+                            <div style={{ fontSize:11, color:"var(--color-text-tertiary)", fontFamily:"var(--font-sans)", marginBottom:4 }}>Tip: click any day on the calendar to customize which actions you do that day.</div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1134,7 +1334,7 @@
                   if (data.budget === "low" && tier !== "low") return false;
                   if (data.budget === "medium" && tier === "high") return false;
                   return true;
-                }).map(b => ({ ...b, task: t }))
+                }).map((b, bi) => ({ ...b, task: t, shedId: `${t.id}-${bi}` }))
               );
               const byCat = {};
               allItems.forEach(item => {
@@ -1144,18 +1344,34 @@
               });
               const visibleCats = shopSubview === "all" ? Object.keys(byCat) : [shopSubview].filter(c => byCat[c]);
               const totalTasks = tasks.filter(t => (t.buy||[]).length > 0).length;
+              const shedItems = data.shedItems || [];
+              const inShedCount = allItems.filter(it => shedItems.includes(it.shedId)).length;
+              const toggleShed = (shedId) => {
+                setData(d => {
+                  const cur = d.shedItems || [];
+                  const next = cur.includes(shedId) ? cur.filter(x => x !== shedId) : [...cur, shedId];
+                  return { ...d, shedItems: next };
+                });
+              };
               return (
                 <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
-                  <div style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:4 }}>
-                    {[["all","All"],["seed","🌱 Seed"],["sprays","🧪 Sprays"],["topdressings","🪣 Topdressings"],["equipment","🔧 Equipment"],["fertilizer","⚗️ Fertilizer"]].map(([k,l]) => (
-                      <button key={k} onClick={() => setShopSubview(k)}
-                        style={{ padding:"6px 14px", borderRadius:99, border:"0.5px solid var(--color-border-secondary)", background: shopSubview===k ? "var(--color-text-primary)" : "var(--color-background-primary)", color: shopSubview===k ? "white" : "var(--color-text-secondary)", fontSize:12, fontFamily:"var(--font-sans)", cursor:"pointer", whiteSpace:"nowrap", flexShrink:0 }}>
-                        {l}
+                  <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:8 }}>
+                    <div style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:4 }}>
+                      {[["all","All"],["seed","🌱 Seed"],["sprays","🧪 Sprays"],["topdressings","🪣 Topdressings"],["equipment","🔧 Equipment"],["fertilizer","⚗️ Fertilizer"]].map(([k,l]) => (
+                        <button key={k} onClick={() => setShopSubview(k)}
+                          style={{ padding:"6px 14px", borderRadius:99, border:"0.5px solid var(--color-border-secondary)", background: shopSubview===k ? "var(--color-text-primary)" : "var(--color-background-primary)", color: shopSubview===k ? "white" : "var(--color-text-secondary)", fontSize:12, fontFamily:"var(--font-sans)", cursor:"pointer", whiteSpace:"nowrap", flexShrink:0 }}>
+                          {l}
+                        </button>
+                      ))}
+                    </div>
+                    {inShedCount > 0 && (
+                      <button onClick={() => setView("shed")} style={{ fontSize:12, fontFamily:"var(--font-sans)", padding:"5px 12px", borderRadius:99, background:"#E1F5EE", color:"#0F6E56", border:"0.5px solid #9FE1CB", cursor:"pointer", whiteSpace:"nowrap" }}>
+                        🏚️ View Shed ({inShedCount})
                       </button>
-                    ))}
+                    )}
                   </div>
                   <div style={{ fontSize:12, color:"var(--color-text-secondary)", fontFamily:"var(--font-sans)" }}>
-                    {allItems.length} items across {totalTasks} tasks · Year {yearOffset+1} · {BUDGET_TIERS[data.budget]?.label} budget
+                    {allItems.length} items across {totalTasks} tasks · Year {yearOffset+1} · Check items to add them to your Shed 🏚️
                   </div>
                   {allItems.length === 0 ? (
                     <div style={{ background:"var(--color-background-secondary)", borderRadius:"var(--border-radius-lg)", padding:24, textAlign:"center", fontFamily:"var(--font-sans)", color:"var(--color-text-secondary)" }}>No items needed for your current budget and situation this year.</div>
@@ -1163,24 +1379,34 @@
                     visibleCats.map(cat => {
                       const catItems = byCat[cat] || [];
                       if (!catItems.length) return null;
-                      const label = SHOP_CAT_LABELS[cat]?.label || cat;
+                      const catLabel = SHOP_CAT_LABELS[cat]?.label || cat;
                       return (
                         <div key={cat}>
-                          <div style={{ fontSize:13, fontWeight:600, fontFamily:"var(--font-sans)", color:"var(--color-text-secondary)", marginBottom:8, textTransform:"uppercase", letterSpacing:"0.05em" }}>{label}</div>
+                          <div style={{ fontSize:13, fontWeight:600, fontFamily:"var(--font-sans)", color:"var(--color-text-secondary)", marginBottom:8, textTransform:"uppercase", letterSpacing:"0.05em" }}>{catLabel}</div>
                           <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-                            {catItems.map((item, idx) => {
+                            {catItems.map((item) => {
                               const taskCat = catStyle(item.task.category);
+                              const inShed = shedItems.includes(item.shedId);
                               return (
-                                <div key={idx} style={{ background:"var(--color-background-primary)", border:"0.5px solid var(--color-border-tertiary)", borderRadius:"var(--border-radius-lg)", padding:"12px 14px" }}>
+                                <div key={item.shedId} style={{ background:"var(--color-background-primary)", border:`0.5px solid ${inShed ? "#9FE1CB" : "var(--color-border-tertiary)"}`, borderRadius:"var(--border-radius-lg)", padding:"12px 14px" }}>
                                   <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:8 }}>
-                                    <div style={{ flex:1, minWidth:0 }}>
-                                      <div style={{ fontFamily:"var(--font-sans)", fontSize:14, fontWeight:500, color:"var(--color-text-primary)", marginBottom:2 }}>{item.item}</div>
-                                      <div style={{ fontSize:12, color:"var(--color-text-secondary)", fontFamily:"var(--font-sans)" }}>{item.price} · {item.where}</div>
-                                      <div style={{ marginTop:6, display:"flex", alignItems:"center", gap:6 }}>
-                                        <span style={{ fontSize:11, fontFamily:"var(--font-sans)", padding:"2px 7px", borderRadius:99, background:taskCat.bg, color:taskCat.text }}>{item.task.title}</span>
-                                        <span style={{ fontSize:11, color:"var(--color-text-tertiary)", fontFamily:"var(--font-sans)" }}>{FULL_MONTHS[item.task.month]}</span>
+                                    <label style={{ display:"flex", alignItems:"flex-start", gap:10, cursor:"pointer", flex:1, minWidth:0 }}>
+                                      <div style={{ position:"relative", flexShrink:0, marginTop:2 }}>
+                                        <input type="checkbox" checked={inShed} onChange={() => toggleShed(item.shedId)} style={{ position:"absolute", opacity:0, width:0, height:0 }} />
+                                        <div style={{ width:18, height:18, borderRadius:4, border:`1.5px solid ${inShed ? "#1D9E75" : "var(--color-border-secondary)"}`, background: inShed ? "#1D9E75" : "white", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                                          {inShed && <span style={{ color:"white", fontSize:11, lineHeight:1 }}>✓</span>}
+                                        </div>
                                       </div>
-                                    </div>
+                                      <div style={{ flex:1 }}>
+                                        <div style={{ fontFamily:"var(--font-sans)", fontSize:14, fontWeight:500, color:"var(--color-text-primary)", marginBottom:2 }}>{item.item}</div>
+                                        <div style={{ fontSize:12, color:"var(--color-text-secondary)", fontFamily:"var(--font-sans)" }}>{item.price} · {item.where}</div>
+                                        <div style={{ marginTop:6, display:"flex", alignItems:"center", gap:6 }}>
+                                          <span style={{ fontSize:11, fontFamily:"var(--font-sans)", padding:"2px 7px", borderRadius:99, background:taskCat.bg, color:taskCat.text }}>{item.task.title}</span>
+                                          <span style={{ fontSize:11, color:"var(--color-text-tertiary)", fontFamily:"var(--font-sans)" }}>{FULL_MONTHS[item.task.month]}</span>
+                                        </div>
+                                      </div>
+                                    </label>
+                                    {inShed && <span style={{ fontSize:11, fontFamily:"var(--font-sans)", color:"#0F6E56", flexShrink:0, marginTop:2 }}>🏚️ In Shed</span>}
                                   </div>
                                 </div>
                               );
@@ -1255,73 +1481,282 @@
               );
             })()}
 
-            {/* LIBRARY / PRODUCTS VIEW */}
-            {view === "library" && (() => {
+            {/* SHED VIEW */}
+            {view === "shed" && (() => {
               const isWarmSeason = data.grassType && (data.grassType.toLowerCase().includes("bermuda") || data.grassType.toLowerCase().includes("zoysia") || data.grassType.toLowerCase().includes("centipede") || data.grassType.toLowerCase().includes("st. augustine") || data.grassType.toLowerCase().includes("bahia"));
               const userSeason = isWarmSeason ? "warm" : "cool";
               const tasks = getTasksThisYear();
               const planItemNames = tasks.flatMap(t => (t.buy||[]).map(b => b.item));
-              const filtered = PRODUCT_CATALOG.filter(p => {
+              const shedItemIds = data.shedItems || [];
+
+              const toggleShedProduct = (prodId) => {
+                setData(d => {
+                  const cur = d.shedItems || [];
+                  const next = cur.includes(prodId) ? cur.filter(x => x !== prodId) : [...cur, prodId];
+                  return { ...d, shedItems: next };
+                });
+              };
+
+              const allProds = PRODUCT_CATALOG.filter(p => {
                 if (libSubview !== "all" && p.shopCat !== libSubview) return false;
-                if (!showAllLibProducts && p.grassSeasonType !== "any" && p.grassSeasonType !== userSeason) return false;
+                if (p.season !== "any" && p.season !== userSeason) return false;
                 return true;
               });
-              const byCat = {};
-              filtered.forEach(p => {
-                const c = p.shopCat || "other";
-                if (!byCat[c]) byCat[c] = [];
-                byCat[c].push(p);
-              });
-              const visibleCats = libSubview === "all" ? Object.keys(byCat) : [libSubview].filter(c => byCat[c]);
+
+              const shedProds = PRODUCT_CATALOG.filter(p => shedItemIds.includes(p.id));
+
+              const renderProdCard = (prod, inShed) => {
+                const inPlan = planItemNames.some(n => n.toLowerCase().includes(prod.name.toLowerCase().split(" ").slice(0,2).join(" ").toLowerCase()));
+                return (
+                  <div key={prod.id} style={{ background:"var(--color-background-primary)", border:`0.5px solid ${inShed ? "#9FE1CB" : inPlan ? "#A7D9F7" : "var(--color-border-tertiary)"}`, borderRadius:"var(--border-radius-lg)", padding:"12px 14px" }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:8, marginBottom:4 }}>
+                      <label style={{ display:"flex", alignItems:"flex-start", gap:10, cursor:"pointer", flex:1 }}>
+                        <div style={{ position:"relative", flexShrink:0, marginTop:2 }}>
+                          <input type="checkbox" checked={inShed} onChange={() => toggleShedProduct(prod.id)} style={{ position:"absolute", opacity:0, width:0, height:0 }} />
+                          <div style={{ width:18, height:18, borderRadius:4, border:`1.5px solid ${inShed ? "#1D9E75" : "var(--color-border-secondary)"}`, background: inShed ? "#1D9E75" : "white", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                            {inShed && <span style={{ color:"white", fontSize:11, lineHeight:1 }}>✓</span>}
+                          </div>
+                        </div>
+                        <div>
+                          <div style={{ fontFamily:"var(--font-sans)", fontSize:14, fontWeight:500, color:"var(--color-text-primary)" }}>{prod.name}</div>
+                          <div style={{ fontSize:12, color:"var(--color-text-secondary)", fontFamily:"var(--font-sans)", marginTop:2 }}>{prod.price} · {prod.where}</div>
+                        </div>
+                      </label>
+                      <div style={{ display:"flex", gap:5, flexShrink:0 }}>
+                        {inPlan && <span style={{ fontSize:10, fontFamily:"var(--font-sans)", padding:"2px 7px", borderRadius:99, background:"#E6F1FB", color:"#185FA5" }}>In plan</span>}
+                        {inShed && <span style={{ fontSize:10, fontFamily:"var(--font-sans)", padding:"2px 7px", borderRadius:99, background:"#E1F5EE", color:"#0F6E56" }}>🏚️ Shed</span>}
+                      </div>
+                    </div>
+                    {prod.researchNote && <div style={{ fontSize:12, color:"var(--color-text-tertiary)", fontFamily:"var(--font-sans)", marginBottom:6, fontStyle:"italic" }}>{prod.researchNote}</div>}
+                    <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+                      {prod.zones && prod.zones.map(z => <span key={z} style={{ fontSize:10, fontFamily:"var(--font-sans)", padding:"1px 6px", borderRadius:99, background:"var(--color-background-secondary)", color:"var(--color-text-secondary)" }}>Zone {z}</span>)}
+                      {prod.season && prod.season !== "any" && <span style={{ fontSize:10, fontFamily:"var(--font-sans)", padding:"1px 6px", borderRadius:99, background:"var(--color-background-secondary)", color:"var(--color-text-secondary)" }}>{prod.season}-season</span>}
+                    </div>
+                  </div>
+                );
+              };
+
               return (
                 <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
-                  <div style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:4 }}>
-                    {[["all","All"],["seed","🌱 Seed"],["sprays","🧪 Sprays"],["topdressings","🪣 Topdressings"],["equipment","🔧 Equipment"],["fertilizer","⚗️ Fertilizer"]].map(([k,l]) => (
-                      <button key={k} onClick={() => setLibSubview(k)}
-                        style={{ padding:"6px 14px", borderRadius:99, border:"0.5px solid var(--color-border-secondary)", background: libSubview===k ? "var(--color-text-primary)" : "var(--color-background-primary)", color: libSubview===k ? "white" : "var(--color-text-secondary)", fontSize:12, fontFamily:"var(--font-sans)", cursor:"pointer", whiteSpace:"nowrap", flexShrink:0 }}>
+                  {/* Sub-tab selector */}
+                  <div style={{ display:"flex", gap:0, background:"var(--color-background-secondary)", borderRadius:"var(--border-radius-lg)", padding:4, width:"fit-content" }}>
+                    {[["all","📦 All Products"],["shed","🏚️ In My Shed"]].map(([k,l]) => (
+                      <button key={k} onClick={() => setShedPane(k)}
+                        style={{ padding:"7px 18px", borderRadius:"var(--border-radius-md)", border:"none", background: shedPane===k ? "var(--color-background-primary)" : "transparent", color: shedPane===k ? "var(--color-text-primary)" : "var(--color-text-secondary)", fontSize:13, fontFamily:"var(--font-sans)", cursor:"pointer", fontWeight: shedPane===k ? 500 : 400, boxShadow: shedPane===k ? "0 1px 3px rgba(0,0,0,0.08)" : "none" }}>
                         {l}
                       </button>
                     ))}
                   </div>
-                  <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-                    <div style={{ fontSize:12, color:"var(--color-text-secondary)", fontFamily:"var(--font-sans)" }}>{filtered.length} products · {userSeason}-season grass</div>
-                    <button onClick={() => setShowAllLibProducts(a => !a)} style={{ fontSize:12, color:"var(--color-text-secondary)", fontFamily:"var(--font-sans)", background:"none", border:"none", cursor:"pointer", textDecoration:"underline" }}>
-                      {showAllLibProducts ? "Show compatible only" : "Show all products"}
-                    </button>
-                  </div>
-                  {filtered.length === 0 ? (
-                    <div style={{ background:"var(--color-background-secondary)", borderRadius:"var(--border-radius-lg)", padding:24, textAlign:"center", fontFamily:"var(--font-sans)", color:"var(--color-text-secondary)" }}>No products found for this filter. Try "Show all products".</div>
-                  ) : (
-                    visibleCats.map(cat => {
-                      const catProds = byCat[cat] || [];
-                      if (!catProds.length) return null;
-                      const label = SHOP_CAT_LABELS[cat]?.label || cat;
-                      return (
-                        <div key={cat}>
-                          <div style={{ fontSize:13, fontWeight:600, fontFamily:"var(--font-sans)", color:"var(--color-text-secondary)", marginBottom:8, textTransform:"uppercase", letterSpacing:"0.05em" }}>{label}</div>
-                          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-                            {catProds.map(prod => {
-                              const inPlan = planItemNames.some(n => n.toLowerCase().includes(prod.name.toLowerCase().split(" ").slice(0,2).join(" ").toLowerCase()));
+
+                  {shedPane === "all" && (
+                    <>
+                      <div style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:4 }}>
+                        {[["all","All"],["seed","🌱 Seed"],["sprays","🧪 Sprays"],["topdressings","🪣 Topdressings"],["equipment","🔧 Equipment"],["fertilizer","⚗️ Fertilizer"]].map(([k,l]) => (
+                          <button key={k} onClick={() => setLibSubview(k)}
+                            style={{ padding:"6px 14px", borderRadius:99, border:"0.5px solid var(--color-border-secondary)", background: libSubview===k ? "var(--color-text-primary)" : "var(--color-background-primary)", color: libSubview===k ? "white" : "var(--color-text-secondary)", fontSize:12, fontFamily:"var(--font-sans)", cursor:"pointer", whiteSpace:"nowrap", flexShrink:0 }}>
+                            {l}
+                          </button>
+                        ))}
+                      </div>
+                      <div style={{ fontSize:12, color:"var(--color-text-secondary)", fontFamily:"var(--font-sans)" }}>
+                        {allProds.length} products for {userSeason}-season grass · Check to add to your Shed
+                      </div>
+                      {allProds.length === 0 ? (
+                        <div style={{ background:"var(--color-background-secondary)", borderRadius:"var(--border-radius-lg)", padding:24, textAlign:"center", fontFamily:"var(--font-sans)", color:"var(--color-text-secondary)" }}>No products found for this filter.</div>
+                      ) : (() => {
+                        const byCat = {};
+                        allProds.forEach(p => {
+                          const c = p.shopCat || "other";
+                          if (!byCat[c]) byCat[c] = [];
+                          byCat[c].push(p);
+                        });
+                        const cats = libSubview === "all" ? Object.keys(byCat) : [libSubview].filter(c => byCat[c]);
+                        return cats.map(cat => {
+                          const prods = byCat[cat] || [];
+                          if (!prods.length) return null;
+                          const catLabel = SHOP_CAT_LABELS[cat]?.label || cat;
+                          return (
+                            <div key={cat}>
+                              <div style={{ fontSize:13, fontWeight:600, fontFamily:"var(--font-sans)", color:"var(--color-text-secondary)", marginBottom:8, textTransform:"uppercase", letterSpacing:"0.05em" }}>{catLabel}</div>
+                              <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+                                {prods.map(prod => renderProdCard(prod, shedItemIds.includes(prod.id)))}
+                              </div>
+                            </div>
+                          );
+                        });
+                      })()}
+                    </>
+                  )}
+
+                  {shedPane === "shed" && (
+                    <>
+                      {shedProds.length === 0 ? (
+                        <div style={{ background:"var(--color-background-secondary)", borderRadius:"var(--border-radius-lg)", padding:32, textAlign:"center", fontFamily:"var(--font-sans)" }}>
+                          <div style={{ fontSize:32, marginBottom:10 }}>🏚️</div>
+                          <div style={{ fontSize:14, fontWeight:500, color:"var(--color-text-primary)", marginBottom:6 }}>Your shed is empty</div>
+                          <div style={{ fontSize:13, color:"var(--color-text-secondary)", marginBottom:16 }}>Check items in Shopping or All Products to add them here.</div>
+                          <button onClick={() => setShedPane("all")} style={{ padding:"8px 18px", borderRadius:"var(--border-radius-md)", background:"#1D9E75", color:"white", border:"none", fontSize:13, fontFamily:"var(--font-sans)", cursor:"pointer" }}>Browse All Products →</button>
+                        </div>
+                      ) : (
+                        <>
+                          <div style={{ fontSize:12, color:"var(--color-text-secondary)", fontFamily:"var(--font-sans)" }}>{shedProds.length} items in your shed</div>
+                          {(() => {
+                            const byCat = {};
+                            shedProds.forEach(p => {
+                              const c = p.shopCat || "other";
+                              if (!byCat[c]) byCat[c] = [];
+                              byCat[c].push(p);
+                            });
+                            return Object.keys(byCat).map(cat => {
+                              const catLabel = SHOP_CAT_LABELS[cat]?.label || cat;
                               return (
-                                <div key={prod.id} style={{ background:"var(--color-background-primary)", border:`0.5px solid ${inPlan ? "#1D9E75" : "var(--color-border-tertiary)"}`, borderRadius:"var(--border-radius-lg)", padding:"12px 14px" }}>
-                                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:8, marginBottom:4 }}>
-                                    <div style={{ fontFamily:"var(--font-sans)", fontSize:14, fontWeight:500, color:"var(--color-text-primary)" }}>{prod.name}</div>
-                                    {inPlan && <span style={{ fontSize:10, fontFamily:"var(--font-sans)", padding:"2px 7px", borderRadius:99, background:"#E1F5EE", color:"#0F6E56", flexShrink:0 }}>In your plan</span>}
-                                  </div>
-                                  <div style={{ fontSize:12, color:"var(--color-text-secondary)", fontFamily:"var(--font-sans)", marginBottom:6 }}>{prod.price} · {prod.where}</div>
-                                  {prod.researchNote && <div style={{ fontSize:12, color:"var(--color-text-tertiary)", fontFamily:"var(--font-sans)", marginBottom:6, fontStyle:"italic" }}>{prod.researchNote}</div>}
-                                  <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
-                                    {prod.zones && prod.zones.map(z => <span key={z} style={{ fontSize:10, fontFamily:"var(--font-sans)", padding:"1px 6px", borderRadius:99, background:"var(--color-background-secondary)", color:"var(--color-text-secondary)" }}>Zone {z}</span>)}
-                                    {prod.grassSeasonType && prod.grassSeasonType !== "any" && <span style={{ fontSize:10, fontFamily:"var(--font-sans)", padding:"1px 6px", borderRadius:99, background:"var(--color-background-secondary)", color:"var(--color-text-secondary)" }}>{prod.grassSeasonType}-season</span>}
+                                <div key={cat}>
+                                  <div style={{ fontSize:13, fontWeight:600, fontFamily:"var(--font-sans)", color:"var(--color-text-secondary)", marginBottom:8, textTransform:"uppercase", letterSpacing:"0.05em" }}>{catLabel}</div>
+                                  <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+                                    {byCat[cat].map(prod => renderProdCard(prod, true))}
                                   </div>
                                 </div>
                               );
-                            })}
-                          </div>
-                        </div>
-                      );
-                    })
+                            });
+                          })()}
+                        </>
+                      )}
+                    </>
                   )}
+                </div>
+              );
+            })()}
+
+            {/* TODAY VIEW */}
+            {view === "today" && (() => {
+              const addDays = (date, n) => { const d = new Date(date); d.setDate(d.getDate()+n); return d; };
+              const formatDate = (date) => date.toLocaleDateString("en-US", { weekday:"long", month:"long", day:"numeric", year:"numeric" });
+              const isToday = todayDate.toDateString() === new Date().toDateString();
+              const todayMonth = todayDate.getMonth() + 1;
+              const todayYear = todayDate.getFullYear();
+              const dayActs = getDayActs(todayDate);
+              const monthCatalogTasks = getTasksThisYear().filter(t => t.month === todayMonth);
+              const ACT_BG = { water:"#EFF6FF", mow:"#F0FDF4", fert:"#FFFBEB", inspect:"#FAF5FF" };
+              const ACT_BORDER = { water:"#BFDBFE", mow:"#BBF7D0", fert:"#FDE68A", inspect:"#E9D5FF" };
+              const ACT_TEXT = { water:"#1E40AF", mow:"#166534", fert:"#92400E", inspect:"#6B21A8" };
+              return (
+                <div style={{ display:"flex", flexDirection:"column", gap:20 }}>
+                  {/* Date nav */}
+                  <div style={{ background:"var(--color-background-primary)", border:"0.5px solid var(--color-border-tertiary)", borderRadius:"var(--border-radius-lg)", padding:"14px 18px" }}>
+                    <div style={{ display:"flex", alignItems:"center", gap:10, fontFamily:"var(--font-sans)" }}>
+                      <button onClick={() => setTodayDate(d => addDays(d, -1))} style={{ padding:"6px 12px", borderRadius:"var(--border-radius-md)", border:"0.5px solid var(--color-border-secondary)", background:"transparent", color:"var(--color-text-secondary)", fontSize:13, cursor:"pointer" }}>← Prev</button>
+                      <div style={{ flex:1, textAlign:"center" }}>
+                        <div style={{ fontSize:15, fontWeight:600, color:"var(--color-text-primary)" }}>{formatDate(todayDate)}</div>
+                        {!isToday && <button onClick={() => setTodayDate(new Date())} style={{ fontSize:12, background:"none", border:"none", color:"#1D9E75", cursor:"pointer", textDecoration:"underline", marginTop:2, fontFamily:"var(--font-sans)" }}>Jump to today</button>}
+                        {isToday && <div style={{ fontSize:12, color:"#1D9E75", marginTop:2 }}>Today ✓</div>}
+                      </div>
+                      <button onClick={() => setTodayDate(d => addDays(d, 1))} style={{ padding:"6px 12px", borderRadius:"var(--border-radius-md)", border:"0.5px solid var(--color-border-secondary)", background:"transparent", color:"var(--color-text-secondary)", fontSize:13, cursor:"pointer" }}>Next →</button>
+                    </div>
+                  </div>
+
+                  {/* Daily routine */}
+                  <div>
+                    <h3 style={{ margin:"0 0 10px", fontSize:16, fontWeight:500, fontFamily:"var(--font-sans)" }}>Today's Routine</h3>
+                    {dayActs.length === 0 ? (
+                      <div style={{ background:"#F0FDF4", border:"0.5px solid #BBF7D0", borderRadius:"var(--border-radius-lg)", padding:"20px 18px", fontFamily:"var(--font-sans)", color:"#166534", textAlign:"center" }}>
+                        <div style={{ fontSize:22, marginBottom:6 }}>☀️</div>
+                        <div style={{ fontSize:13 }}>Nothing routine scheduled for today. Enjoy your lawn!</div>
+                      </div>
+                    ) : (
+                      <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                        {dayActs.map((act, i) => (
+                          <div key={i} style={{ background: ACT_BG[act.type] || "#F9FAFB", border:`0.5px solid ${ACT_BORDER[act.type] || "var(--color-border-tertiary)"}`, borderRadius:"var(--border-radius-lg)", padding:"12px 16px", display:"flex", alignItems:"center", gap:12 }}>
+                            <span style={{ fontSize:22 }}>{act.icon}</span>
+                            <div>
+                              <div style={{ fontFamily:"var(--font-sans)", fontSize:14, fontWeight:500, color: ACT_TEXT[act.type] || "var(--color-text-primary)" }}>{act.label}</div>
+                              <div style={{ fontSize:12, color:"var(--color-text-tertiary)", fontFamily:"var(--font-sans)", marginTop:2 }}>{act.type === "water" ? "Track with a rain gauge — target 1\" total per week" : act.type === "mow" ? `Target height: ${data.mowHeight}"` : act.type === "fert" ? "Apply per label rate; water in lightly after" : "Document progress in Notes"}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* This month's TASK_CATALOG tasks */}
+                  <div>
+                    <h3 style={{ margin:"0 0 10px", fontSize:16, fontWeight:500, fontFamily:"var(--font-sans)" }}>
+                      {FULL_MONTHS[todayDate.getMonth()]} Tasks
+                      {todayYear !== currentYear && <span style={{ fontSize:13, fontWeight:400, color:"var(--color-text-secondary)", marginLeft:8 }}>({todayYear})</span>}
+                    </h3>
+                    {monthCatalogTasks.length === 0 ? (
+                      <div style={{ background:"var(--color-background-secondary)", borderRadius:"var(--border-radius-lg)", padding:"20px 18px", fontFamily:"var(--font-sans)", color:"var(--color-text-secondary)", textAlign:"center", fontSize:13 }}>
+                        No tasks scheduled for {FULL_MONTHS[todayDate.getMonth()]}.
+                      </div>
+                    ) : (
+                      <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                        {monthCatalogTasks.map(task => {
+                          const done = isCompleted(task.id, task.month);
+                          const cat = catStyle(task.category);
+                          return (
+                            <div key={task.id} style={{ background:"var(--color-background-primary)", border:`0.5px solid ${done ? "#9FE1CB" : "var(--color-border-tertiary)"}`, borderRadius:"var(--border-radius-lg)", padding:"12px 16px", display:"flex", gap:12, alignItems:"flex-start", opacity: done ? 0.75 : 1, cursor:"pointer" }}
+                              onClick={() => { setActiveMonth(task.month - 1); setView("calendar"); setActiveTask(task.id); }}>
+                              <button onClick={e => { e.stopPropagation(); toggleComplete(task.id, task.month); }}
+                                style={{ width:20, height:20, borderRadius:"50%", flexShrink:0, marginTop:1, background: done ? "#1D9E75" : "transparent", border:`1.5px solid ${done ? "#1D9E75" : "var(--color-border-secondary)"}`, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", padding:0 }}>
+                                {done && <span style={{ color:"#fff", fontSize:11 }}>✓</span>}
+                              </button>
+                              <div style={{ flex:1, minWidth:0 }}>
+                                <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap", marginBottom:3 }}>
+                                  <span style={{ fontFamily:"var(--font-sans)", fontSize:14, fontWeight:500, color: done ? "var(--color-text-secondary)" : "var(--color-text-primary)", textDecoration: done ? "line-through" : "none" }}>{task.title}</span>
+                                  <span style={{ fontSize:11, fontFamily:"var(--font-sans)", padding:"2px 7px", borderRadius:99, background:cat.bg, color:cat.text }}>{cat.label}</span>
+                                  <span style={{ fontSize:11, fontFamily:"var(--font-sans)", color: task.priority==="critical" ? "#E24B4A" : task.priority==="high" ? "#BA7517" : "var(--color-text-tertiary)" }}>
+                                    {task.priority === "critical" ? "🔴" : task.priority === "high" ? "🟡" : "🟢"} {task.priority}
+                                  </span>
+                                </div>
+                                <div style={{ fontSize:12, color:"var(--color-text-secondary)", fontFamily:"var(--font-sans)" }}>{task.timing} · {task.cost}</div>
+                              </div>
+                              <span style={{ fontSize:12, color:"var(--color-text-tertiary)", fontFamily:"var(--font-sans)", flexShrink:0 }}>View →</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* LAWN PRO FAQ VIEW */}
+            {view === "lawn-pro" && (() => {
+              return (
+                <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
+                  <div style={{ marginBottom:4 }}>
+                    <h2 style={{ margin:"0 0 4px", fontSize:20, fontWeight:500 }}>Ask a Lawn Pro</h2>
+                    <p style={{ margin:0, fontSize:13, color:"var(--color-text-secondary)", fontFamily:"var(--font-sans)" }}>Top questions from new lawn owners — answered with research-backed guidance.</p>
+                  </div>
+                  {FAQ_SECTIONS.map(section => (
+                    <div key={section.id} style={{ background:"var(--color-background-primary)", border:"0.5px solid var(--color-border-tertiary)", borderRadius:"var(--border-radius-lg)", overflow:"hidden" }}>
+                      <div style={{ padding:"14px 18px", background:"var(--color-background-secondary)", borderBottom:"0.5px solid var(--color-border-tertiary)", display:"flex", alignItems:"center", gap:10 }}>
+                        <span style={{ fontSize:20 }}>{section.icon}</span>
+                        <span style={{ fontFamily:"var(--font-sans)", fontSize:16, fontWeight:600, color:"var(--color-text-primary)" }}>{section.title}</span>
+                        <span style={{ fontFamily:"var(--font-sans)", fontSize:12, color:"var(--color-text-tertiary)", marginLeft:"auto" }}>{section.faqs.length} questions</span>
+                      </div>
+                      <div style={{ display:"flex", flexDirection:"column" }}>
+                        {section.faqs.map((faq, idx) => {
+                          const key = `${section.id}-${idx}`;
+                          const isOpen = lawnProOpenQ === key;
+                          return (
+                            <div key={idx} style={{ borderBottom: idx < section.faqs.length - 1 ? "0.5px solid var(--color-border-tertiary)" : "none" }}>
+                              <button onClick={() => setLawnProOpenQ(isOpen ? null : key)}
+                                style={{ width:"100%", padding:"13px 18px", display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, background: isOpen ? "#F9FAFB" : "transparent", border:"none", cursor:"pointer", textAlign:"left" }}>
+                                <span style={{ fontFamily:"var(--font-sans)", fontSize:14, fontWeight: isOpen ? 600 : 400, color:"var(--color-text-primary)", lineHeight:1.4 }}>{faq.q}</span>
+                                <span style={{ color:"var(--color-text-tertiary)", fontSize:14, flexShrink:0 }}>{isOpen ? "▲" : "▼"}</span>
+                              </button>
+                              {isOpen && (
+                                <div style={{ padding:"0 18px 14px 18px", background:"#F9FAFB" }}>
+                                  <p style={{ margin:0, fontSize:13, fontFamily:"var(--font-sans)", color:"var(--color-text-secondary)", lineHeight:1.7 }}>{faq.a}</p>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               );
             })()}
