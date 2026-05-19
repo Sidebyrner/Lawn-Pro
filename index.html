@@ -586,6 +586,158 @@
     }
     function getTaskKey(taskId, year, month) { return `${taskId}_${year}_${month}`; }
 
+    // ─── WMO weather code map ─────────────────────────────────────────────────
+    const WMO = {
+      0:{icon:"☀️",label:"Clear"},1:{icon:"🌤️",label:"Mostly clear"},2:{icon:"⛅",label:"Partly cloudy"},
+      3:{icon:"☁️",label:"Overcast"},45:{icon:"🌫️",label:"Fog"},48:{icon:"🌫️",label:"Icy fog"},
+      51:{icon:"🌦️",label:"Light drizzle"},53:{icon:"🌦️",label:"Drizzle"},55:{icon:"🌧️",label:"Heavy drizzle"},
+      61:{icon:"🌧️",label:"Light rain"},63:{icon:"🌧️",label:"Rain"},65:{icon:"🌧️",label:"Heavy rain"},
+      71:{icon:"🌨️",label:"Light snow"},73:{icon:"❄️",label:"Snow"},75:{icon:"❄️",label:"Heavy snow"},
+      77:{icon:"🌨️",label:"Snow grains"},80:{icon:"🌦️",label:"Showers"},81:{icon:"🌧️",label:"Heavy showers"},
+      82:{icon:"⛈️",label:"Violent showers"},85:{icon:"🌨️",label:"Snow showers"},86:{icon:"❄️",label:"Heavy snow showers"},
+      95:{icon:"⛈️",label:"Thunderstorm"},96:{icon:"⛈️",label:"Storm+hail"},99:{icon:"⛈️",label:"Storm+heavy hail"},
+    };
+    const wmo = (code) => WMO[code] || { icon:"🌡️", label:"Unknown" };
+
+    function lawnTip(weather) {
+      const { temp, code, humidity, wind, dailyPrecip } = weather;
+      if (dailyPrecip >= 0.5) return { icon:"💧", text:`${dailyPrecip}" rain today — skip watering`, color:"#185FA5", bg:"#E6F1FB" };
+      if (code >= 61 && code <= 82) return { icon:"🌧️", text:"Rain in forecast — hold off on watering", color:"#185FA5", bg:"#E6F1FB" };
+      if (code >= 95) return { icon:"⛈️", text:"Thunderstorm — stay off the lawn", color:"#7C3AED", bg:"#EDE9FE" };
+      if (wind >= 15) return { icon:"💨", text:`Winds ${wind} mph — skip herbicide spraying`, color:"#854F0B", bg:"#FAEEDA" };
+      if (temp >= 90) return { icon:"🌡️", text:"Heat stress risk — water deeply this AM", color:"#A32D2D", bg:"#FCEBEB" };
+      if (humidity >= 80 && code <= 3) return { icon:"🍄", text:"High humidity — watch for fungal disease", color:"#6B4C1A", bg:"#FDF3E3" };
+      if (temp >= 65 && temp <= 80 && code <= 3 && wind < 10) return { icon:"✂️", text:"Great mowing conditions today", color:"#0F6E56", bg:"#E1F5EE" };
+      return { icon:"🌿", text:"Good day to check on your lawn", color:"#1D9E75", bg:"#F0FAF5" };
+    }
+
+    function WeatherWidget({ location }) {
+      const [wx, setWx] = useState(null);
+      const [loading, setLoading] = useState(true);
+      const [error, setError] = useState(null);
+      const [expanded, setExpanded] = useState(false);
+
+      useEffect(() => {
+        let cancelled = false;
+
+        async function fetchWx(lat, lon) {
+          const url = [
+            "https://api.open-meteo.com/v1/forecast",
+            `?latitude=${lat}&longitude=${lon}`,
+            "&current=temperature_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,relative_humidity_2m",
+            "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max",
+            "&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch",
+            "&forecast_days=4&timezone=auto",
+          ].join("");
+          const r = await fetch(url);
+          if (!r.ok) throw new Error("weather fetch failed");
+          const d = await r.json();
+          if (!cancelled) {
+            setWx({
+              temp: Math.round(d.current.temperature_2m),
+              feelsLike: Math.round(d.current.apparent_temperature),
+              code: d.current.weather_code,
+              precip: d.current.precipitation,
+              humidity: d.current.relative_humidity_2m,
+              wind: Math.round(d.current.wind_speed_10m),
+              dailyPrecip: d.daily.precipitation_sum[0] || 0,
+              forecast: d.daily.time.slice(1, 4).map((t, i) => ({
+                date: t,
+                code: d.daily.weather_code[i + 1],
+                high: Math.round(d.daily.temperature_2m_max[i + 1]),
+                low: Math.round(d.daily.temperature_2m_min[i + 1]),
+                precip: d.daily.precipitation_sum[i + 1] || 0,
+                precipProb: d.daily.precipitation_probability_max[i + 1] || 0,
+              })),
+            });
+            setLoading(false);
+          }
+        }
+
+        async function getCoords() {
+          if (location && location.trim()) {
+            try {
+              const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(location.trim())}&count=1&language=en&format=json`);
+              const d = await r.json();
+              if (d.results && d.results.length > 0) return { lat: d.results[0].latitude, lon: d.results[0].longitude };
+            } catch {}
+          }
+          return new Promise((res, rej) => {
+            if (!navigator.geolocation) return rej(new Error("no geolocation"));
+            navigator.geolocation.getCurrentPosition(
+              p => res({ lat: p.coords.latitude, lon: p.coords.longitude }),
+              rej,
+              { timeout: 8000 }
+            );
+          });
+        }
+
+        setLoading(true);
+        setError(null);
+        getCoords()
+          .then(({ lat, lon }) => fetchWx(lat, lon))
+          .catch(() => { if (!cancelled) { setError("Weather unavailable"); setLoading(false); } });
+
+        return () => { cancelled = true; };
+      }, [location]);
+
+      const baseStyle = { background:"var(--color-background-primary)", borderBottom:"0.5px solid var(--color-border-tertiary)", padding:"10px 20px", fontFamily:"var(--font-sans)", fontSize:12 };
+
+      if (loading) return (
+        <div style={{ ...baseStyle, color:"var(--color-text-tertiary)", display:"flex", alignItems:"center", gap:6 }}>
+          <span style={{ display:"inline-block", animation:"spin 1s linear infinite" }}>⟳</span> Fetching weather…
+          <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
+        </div>
+      );
+      if (error || !wx) return null;
+
+      const tip = lawnTip(wx);
+      const dayNames = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+      const fmtDay = (iso) => { const d = new Date(iso + "T12:00:00"); return dayNames[d.getDay()]; };
+
+      return (
+        <div style={{ ...baseStyle, background: "linear-gradient(135deg, #f8fbf8 0%, #f0f7f0 100%)" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:16, flexWrap:"wrap", maxWidth:1120, margin:"0 auto" }}>
+
+            {/* Current conditions */}
+            <div style={{ display:"flex", alignItems:"center", gap:8, minWidth:0 }}>
+              <span style={{ fontSize:28, lineHeight:1 }}>{wmo(wx.code).icon}</span>
+              <div>
+                <div style={{ fontSize:20, fontWeight:600, color:"var(--color-text-primary)", lineHeight:1 }}>{wx.temp}°F</div>
+                <div style={{ color:"var(--color-text-tertiary)", fontSize:11 }}>Feels {wx.feelsLike}°F · {wmo(wx.code).label}</div>
+              </div>
+            </div>
+
+            {/* Stats */}
+            <div style={{ display:"flex", gap:12, color:"var(--color-text-secondary)", fontSize:12 }}>
+              <span title="Relative humidity">💧 {wx.humidity}%</span>
+              <span title="Wind speed">💨 {wx.wind} mph</span>
+              {wx.dailyPrecip > 0 && <span title="Precipitation today" style={{ color:"#185FA5" }}>🌧 {wx.dailyPrecip}" today</span>}
+            </div>
+
+            {/* Lawn tip */}
+            <div style={{ padding:"4px 10px", borderRadius:99, background:tip.bg, color:tip.color, fontSize:12, fontWeight:500, whiteSpace:"nowrap" }}>
+              {tip.icon} {tip.text}
+            </div>
+
+            {/* 3-day forecast */}
+            <div style={{ display:"flex", gap:8, marginLeft:"auto" }}>
+              {wx.forecast.map((day, i) => (
+                <div key={i} style={{ textAlign:"center", minWidth:48, padding:"4px 6px", borderRadius:"var(--border-radius-md)", background:"rgba(255,255,255,0.7)", border:"0.5px solid var(--color-border-tertiary)" }}>
+                  <div style={{ fontSize:10, color:"var(--color-text-tertiary)", marginBottom:2 }}>{fmtDay(day.date)}</div>
+                  <div style={{ fontSize:16 }}>{wmo(day.code).icon}</div>
+                  <div style={{ fontSize:11, fontWeight:500, color:"var(--color-text-primary)" }}>{day.high}°</div>
+                  <div style={{ fontSize:10, color:"var(--color-text-tertiary)" }}>{day.low}°</div>
+                  {day.precipProb >= 30 && <div style={{ fontSize:9, color:"#185FA5", marginTop:1 }}>{day.precipProb}%</div>}
+                </div>
+              ))}
+            </div>
+
+          </div>
+        </div>
+      );
+    }
+
     function LawnPro() {
       const [data, setData] = useState(loadData);
       const [activeMonth, setActiveMonth] = useState(new Date().getMonth());
@@ -965,6 +1117,9 @@
               </div>
             )}
           </div>
+
+          {/* Weather widget */}
+          <WeatherWidget location={data.location} />
 
           {/* Progress bar */}
           <div style={{ background:"var(--color-background-primary)", borderBottom:"0.5px solid var(--color-border-tertiary)", padding:"10px 20px", display:"flex", alignItems:"center", gap:16, fontFamily:"var(--font-sans)" }}>
